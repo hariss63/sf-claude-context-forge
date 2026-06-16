@@ -1,0 +1,24 @@
+{
+  "orgName": "Demo Org",
+  "orgAlias": "demo",
+  "srcDir": "src",
+  "demoDir": "demo-metadata",
+  "outputDir": "generated",
+  "metadataTypes": [
+    "objects",
+    "flows",
+    "classes",
+    "triggers",
+    "lwc",
+    "permissionsets",
+    "profiles",
+    "layouts",
+    "emailTemplates"
+  ],
+  "skillFormat": "markdown",
+  "dryRun": false,
+  "useDemoIfSrcEmpty": true,
+  "pushToClaudeCode": false,
+  "claudeSkillsDir": "~/.claude/skills/sf-forge",
+  "reviewBeforePush": true
+}
