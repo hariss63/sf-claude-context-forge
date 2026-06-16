@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <description>Sends an email notification when a Project record status changes to Completed or Cancelled.</description>
+    <label>Project Status Notification</label>
+    <processType>AutoLaunchedFlow</processType>
+    <triggerType>RecordAfterSave</triggerType>
+    <object>Project__c</object>
+    <status>Active</status>
+    <triggerOrder>1</triggerOrder>
+    <recordTriggerType>Update</recordTriggerType>
+    <decisions>
+        <name>Check_Status_Changed</name>
+        <label>Check Status Changed</label>
+        <locationX>176</locationX>
+        <locationY>287</locationY>
+        <defaultConnectorLabel>No Status Change</defaultConnectorLabel>
+        <rules>
+            <name>Status_Is_Terminal</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Completed</stringValue>
+                </rightValue>
+            </conditions>
+            <label>Status Is Terminal</label>
+        </rules>
+    </decisions>
+    <actionCalls>
+        <name>Send_Notification_Email</name>
+        <label>Send Notification Email</label>
+        <locationX>176</locationX>
+        <locationY>503</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.Owner.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Project Status Updated: {!$Record.Name}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>The project "{!$Record.Name}" has been updated to status: {!$Record.Status__c}.</stringValue>
+            </value>
+        </inputParameters>
+    </actionCalls>
+</Flow>

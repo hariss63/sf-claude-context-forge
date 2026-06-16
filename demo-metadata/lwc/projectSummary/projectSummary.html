@@ -1,0 +1,29 @@
+<template>
+    <lightning-card title="Project Summary" icon-name="standard:project">
+        <div class="slds-m-around_medium">
+            <template if:true={account.data}>
+                <p><strong>Supplier:</strong> {accountName}</p>
+                <p><strong>Active:</strong> {isActive}</p>
+                <p><strong>Active Projects:</strong> {projectCount}</p>
+
+                <template if:true={hasProjects}>
+                    <ul>
+                        <template for:each={projects} for:item="proj">
+                            <li key={proj.Id}>
+                                {proj.Name} — <em>{proj.Status__c}</em>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+
+                <template if:false={hasProjects}>
+                    <p class="slds-text-color_weak">No active projects found.</p>
+                </template>
+            </template>
+
+            <template if:true={error}>
+                <p class="slds-text-color_error">Error loading data: {error}</p>
+            </template>
+        </div>
+    </lightning-card>
+</template>

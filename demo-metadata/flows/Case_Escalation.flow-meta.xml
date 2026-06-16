@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <description>Screen flow that guides support agents through the case escalation process, collecting reason and approver details.</description>
+    <label>Case Escalation</label>
+    <processType>Flow</processType>
+    <status>Active</status>
+    <screens>
+        <name>Escalation_Details_Screen</name>
+        <label>Escalation Details</label>
+        <locationX>176</locationX>
+        <locationY>287</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>Escalation_Reason</name>
+            <dataType>String</dataType>
+            <fieldText>Escalation Reason</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Approver_Name</name>
+            <dataType>String</dataType>
+            <fieldText>Approver Name</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+    </screens>
+</Flow>
