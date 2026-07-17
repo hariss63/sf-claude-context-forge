@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # sf-claude-context-forge — universal entry point
-# Usage: ./forge.sh [--dry-run] [--push] [--demo] [--runtime node|python]
+# Usage: ./forge.sh [--dry-run] [--demo] [--runtime node|python]
 
 set -e
 
@@ -23,7 +23,6 @@ for arg in "$@"; do
   case $arg in
     --runtime=node) RUNTIME="node" ;;
     --runtime=python) RUNTIME="python" ;;
-    --push) EXTRA_ARGS="$EXTRA_ARGS --push" ;;
     --dry-run) EXTRA_ARGS="$EXTRA_ARGS --dry-run" ;;
     --demo) EXTRA_ARGS="$EXTRA_ARGS --demo" ;;
   esac
@@ -45,10 +44,6 @@ fi
 
 # Run with selected runtime
 if [ "$RUNTIME" = "node" ]; then
-  if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}⚙ Installing Node dependencies...${NC}"
-    npm install --silent
-  fi
   echo -e "${CYAN}▶ Running forge with Node.js...${NC}"
   node forge.js $EXTRA_ARGS
 elif [ "$RUNTIME" = "python" ]; then
@@ -57,19 +52,4 @@ elif [ "$RUNTIME" = "python" ]; then
 fi
 
 echo ""
-echo -e "${GREEN}✓ Forge complete. Skills written to generated/${NC}"
-
-# Handle push
-if [[ "$EXTRA_ARGS" == *"--push"* ]]; then
-  CONFIG_PUSH=$(node -e "const c=require('./org-config.json');console.log(c.reviewBeforePush)" 2>/dev/null || echo "true")
-  if [ "$CONFIG_PUSH" = "true" ]; then
-    echo ""
-    echo -e "${YELLOW}Review generated/ before pushing to Claude Code.${NC}"
-    echo -e "When ready, run: ${CYAN}./forge.sh --push --skip-review${NC}"
-  else
-    SKILLS_DIR=$(node -e "const c=require('./org-config.json');console.log(c.claudeSkillsDir)" 2>/dev/null || echo "~/.claude/skills/sf-forge")
-    mkdir -p "$SKILLS_DIR"
-    cp -r generated/* "$SKILLS_DIR/"
-    echo -e "${GREEN}✓ Skills pushed to $SKILLS_DIR${NC}"
-  fi
-fi
+echo -e "${GREEN}✓ Forge complete. Skills written to .claude/skills/, reference docs to generated/reference/${NC}"

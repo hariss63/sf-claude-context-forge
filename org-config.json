@@ -13,12 +13,14 @@
     "permissionsets",
     "profiles",
     "layouts",
-    "emailTemplates"
+    "emailTemplates",
+    "customMetadata",
+    "connectedApps",
+    "genAiPromptTemplates",
+    "flexipages",
+    "approvalProcesses"
   ],
-  "skillFormat": "markdown",
+  "skillFormat": "agent-skills",
   "dryRun": false,
-  "useDemoIfSrcEmpty": true,
-  "pushToClaudeCode": false,
-  "claudeSkillsDir": "~/.claude/skills/sf-forge",
-  "reviewBeforePush": true
+  "useDemoIfSrcEmpty": true
 }
