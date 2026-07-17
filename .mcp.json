@@ -2,7 +2,7 @@
   "mcpServers": {
     "salesforce": {
       "command": "npx",
-      "args": ["-y", "@salesforce/mcp", "--orgs", "demo"]
+      "args": ["-y", "@salesforce/mcp@0.30.14", "--orgs", "demo"]
     }
   }
 }

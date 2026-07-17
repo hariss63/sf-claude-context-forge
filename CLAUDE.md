@@ -2,19 +2,21 @@
 
 ## What this project does
 
-sf-claude-context-forge is a code-generation scaffold for Salesforce developers working with Claude Code. It operates in two phases:
+sf-claude-context-forge is a code-generation scaffold for Salesforce developers working with Claude Code. It operates in three phases:
 
-1. **Forge phase** — reads real Salesforce SFDX metadata from `src/` (or `demo-metadata/`), parses it, and generates Claude-ready Markdown skill files in `generated/`. These skill files teach Claude the org's actual naming conventions, object model, Apex patterns, Flow structures, and component architecture.
+1. **Forge phase** — reads real Salesforce SFDX metadata from `src/` (or `demo-metadata/`), parses it, and generates native Claude Agent Skills into `.claude/skills/`. 14 metadata types (objects, flows, classes, triggers, lwc, permissionsets, profiles, layouts, emailTemplates, customMetadata, connectedApps, genAiPromptTemplates, flexipages, approvalProcesses) get a dedicated `SKILL.md` + `references/<type>-reference.md`. Any other metadata type found in `src/` falls back to a generic parser and is written as a plain reference doc under `generated/reference/` instead of a full skill. These skills teach Claude the org's actual naming conventions, object model, Apex patterns, Flow structures, and component architecture.
 
-2. **Create phase** — once Claude has loaded the generated skills, you ask it to create new Salesforce metadata (objects, fields, Apex classes, Flows, LWC components) and it follows the org's real patterns automatically instead of generating generic boilerplate.
+2. **Create phase** — once Claude Code has auto-loaded the skills under `.claude/skills/`, you ask it to create new Salesforce metadata (objects, fields, Apex classes, Flows, LWC components, Custom Metadata records, Connected Apps, Prompt Builder templates, and more) and it follows the org's real patterns automatically instead of generating generic boilerplate.
 
-The bridge between phases is `generated/`. The forge step writes it; the create step reads it.
+3. **Live query phase** — `.mcp.json` wires up the official Salesforce DX MCP Server (`@salesforce/mcp`), so Claude can also query the live org (describe objects, run SOQL) alongside reading the forged skills.
+
+The bridge between phases 1 and 2 is `.claude/skills/`. The forge step writes it; Claude Code auto-loads it — no manual push step.
 
 ---
 
 ## Workflows
 
-### Workflow 1: Forge — src/ → generated/
+### Workflow 1: Forge — src/ → .claude/skills/
 
 ```
 ./forge.sh
@@ -24,7 +26,7 @@ npm run forge
 python forge.py
 ```
 
-This reads metadata from `src/` (your SFDX project source) and writes skill Markdown files into `generated/`.
+This reads metadata from `src/` (your SFDX project source) and writes Agent Skills into `.claude/skills/` (dedicated types) plus reference docs into `generated/reference/` (everything else, auto-detected).
 
 To run against the bundled demo metadata:
 ```
@@ -44,10 +46,13 @@ python forge.py --dry-run
 
 ### Workflow 2: Create — prompt → new SF metadata
 
-After forging:
-1. Load the relevant generated skill files (e.g. `/generated/objects.md`, `/generated/classes.md`)
-2. Ask Claude to generate new metadata: "Create a custom object called Vendor__c with fields for Rating and ContractValue"
-3. Claude uses the org's conventions from the skill files to produce correct, consistent SFDX source-format XML and Apex
+After forging, skills under `.claude/skills/` are auto-loaded by Claude Code — no manual step needed:
+1. Ask Claude to generate new metadata: "Create a custom object called Vendor__c with fields for Rating and ContractValue"
+2. Claude reads the relevant skill (e.g. `.claude/skills/salesforce-objects/SKILL.md` + its `references/` file) and uses the org's conventions to produce correct, consistent SFDX source-format XML and Apex
+
+### Workflow 3: Live org queries via MCP
+
+`.mcp.json` configures the official Salesforce DX MCP Server (`@salesforce/mcp`), pointed at the org alias in `orgAlias`/`--orgs`. Use it when Claude needs to check current live org state (e.g. "does this field already exist?") rather than relying solely on the last `src/` retrieve.
 
 ---
 
@@ -60,14 +65,31 @@ sf-claude-context-forge/
 ├── forge.py                     ← Python entry point
 ├── forge.sh                     ← Shell entry point (wraps Node or Python)
 ├── org-config.json              ← Org name and preferences
+├── .mcp.json                    ← Live org access via @salesforce/mcp
 ├── package.json                 ← npm scripts
 ├── requirements.txt             ← Python deps (stdlib only)
 │
 ├── src/                         ← Your SFDX metadata goes here (gitkeep placeholder)
 │   └── .gitkeep
 │
-├── generated/                   ← Output: Claude skill Markdown files
-│   └── .gitkeep
+├── .claude/
+│   └── skills/                  ← Output: native Claude Agent Skills (auto-loaded)
+│       ├── salesforce-objects/SKILL.md + references/
+│       ├── salesforce-apex/SKILL.md + references/       (classes + triggers)
+│       ├── salesforce-flows/SKILL.md + references/
+│       ├── salesforce-lwc/SKILL.md + references/
+│       ├── salesforce-permission-sets/SKILL.md + references/
+│       ├── salesforce-profiles/SKILL.md + references/
+│       ├── salesforce-layouts/SKILL.md + references/
+│       ├── salesforce-email-templates/SKILL.md + references/
+│       ├── salesforce-custom-metadata/SKILL.md + references/
+│       ├── salesforce-connected-apps/SKILL.md + references/
+│       ├── salesforce-prompt-templates/SKILL.md + references/
+│       ├── salesforce-flexipages/SKILL.md + references/
+│       └── salesforce-approval-processes/SKILL.md + references/
+│
+├── generated/
+│   └── reference/                ← Output: plain reference docs for non-creatable types
 │
 ├── demo-metadata/               ← Sample SFDX metadata for --demo mode
 │   ├── objects/
@@ -95,7 +117,13 @@ sf-claude-context-forge/
 │   │   │   ├── permsetParser.js
 │   │   │   ├── profileParser.js
 │   │   │   ├── layoutParser.js
-│   │   │   └── templateParser.js
+│   │   │   ├── templateParser.js
+│   │   │   ├── customMetadataParser.js
+│   │   │   ├── connectedAppParser.js
+│   │   │   ├── genAiPromptTemplateParser.js
+│   │   │   ├── flexipageParser.js
+│   │   │   ├── approvalProcessParser.js
+│   │   │   └── genericParser.js      ← fallback for any type without a dedicated parser
 │   │   └── generator.js
 │   └── python/
 │       ├── __init__.py
@@ -109,7 +137,13 @@ sf-claude-context-forge/
 │           ├── permset_parser.py
 │           ├── profile_parser.py
 │           ├── layout_parser.py
-│           └── template_parser.py
+│           ├── template_parser.py
+│           ├── custom_metadata_parser.py
+│           ├── connected_app_parser.py
+│           ├── gen_ai_prompt_template_parser.py
+│           ├── flexipage_parser.py
+│           ├── approval_process_parser.py
+│           └── generic_parser.py      ← fallback for any type without a dedicated parser
 │
 └── SKILL.md                     ← Static skill: how to use this tool with Claude
 ```
@@ -128,21 +162,29 @@ sf-claude-context-forge/
 | `python forge.py` | Python equivalent of forge.sh |
 | `python forge.py --demo` | Python demo mode |
 
+### MCP
+
+`.mcp.json` runs the official Salesforce DX MCP Server (`npx -y @salesforce/mcp@0.30.14 --orgs <alias>`) for live org queries — independent of the forge scripts, no changes needed to `forge.js`/`forge.py`. The version is pinned deliberately since `npx -y` executes code fetched from the npm registry at run time; bump it intentionally rather than tracking `latest`. Update the `--orgs` value to match an authenticated org alias before relying on it.
+
 ---
 
 ## org-config.json
 
-Controls the org name stamped into generated skill files and parser behaviour:
+Controls the org name stamped into generated skills, which metadata types get a dedicated parser, and parser behaviour:
 
 ```json
 {
   "orgName": "My Org",
-  "sourceDir": "src",
-  "outputDir": "generated"
+  "orgAlias": "my-alias",
+  "srcDir": "src",
+  "outputDir": "generated",
+  "metadataTypes": ["objects", "flows", "classes", "triggers", "lwc", "permissionsets", "profiles", "layouts", "emailTemplates", "customMetadata", "connectedApps", "genAiPromptTemplates", "flexipages", "approvalProcesses"],
+  "skillFormat": "agent-skills",
+  "useDemoIfSrcEmpty": true
 }
 ```
 
-The `--demo` flag overrides `sourceDir` to point at `demo-metadata/`.
+The `--demo` flag overrides `srcDir` to point at `demo-metadata/`. `orgAlias` should match the `--orgs` value in `.mcp.json`. Any `src/` subdirectory not listed in `metadataTypes` is still picked up automatically via the generic parser — it doesn't need a config entry.
 
 ---
 
@@ -150,27 +192,33 @@ The `--demo` flag overrides `sourceDir` to point at `demo-metadata/`.
 
 Each parser is a thin wrapper around stdlib XML extraction (regex-based, no external deps):
 
-| Parser | Input | Key output fields |
-|---|---|---|
-| objectParser | `objects/*/` | apiName, label, fields[{apiName, type, required}] |
-| apexParser | `classes/`, `triggers/` | classes[{name, isTest, sharing}], triggers[{name, object, events}] |
-| flowParser | `flows/*.flow-meta.xml` | apiName, processType, triggerType, object |
-| lwcParser | `lwc/*/` | name, files, hasApexWire, hasLds |
-| permsetParser | `permissionsets/*.permissionset-meta.xml` | apiName, label, objectPerms, fieldPerms |
-| profileParser | `profiles/*.profile-meta.xml` | name |
-| layoutParser | `layouts/*.layout-meta.xml` | name |
-| templateParser | `emailTemplates/*.email-meta.xml` | name, subject, encoding |
+| Parser | Input | Key output fields | Tier |
+|---|---|---|---|
+| objectParser | `objects/*/` | apiName, label, fields[{apiName, type, required}] | Skill |
+| apexParser | `classes/`, `triggers/` | classes[{name, isTest, sharing}], triggers[{name, object, events}] | Skill |
+| flowParser | `flows/*.flow-meta.xml` | apiName, processType, triggerType, object | Skill |
+| lwcParser | `lwc/*/` | name, files, hasApexWire, hasLds | Skill |
+| permsetParser | `permissionsets/*.permissionset-meta.xml` | apiName, label, objectPerms, fieldPerms | Skill |
+| profileParser | `profiles/*.profile-meta.xml` | name | Skill |
+| layoutParser | `layouts/*.layout-meta.xml` | name | Skill |
+| templateParser | `emailTemplates/*.email-meta.xml` | name, subject, encoding | Skill |
+| customMetadataParser | `customMetadata/*.md-meta.xml` | fullName, typeName, recordName, label, protected, fields[{field, value}] | Skill |
+| connectedAppParser | `connectedApps/*.connectedApp-meta.xml` | apiName, label, contactEmail, scopes | Skill |
+| genAiPromptTemplateParser | `genAiPromptTemplates/*.genAiPromptTemplate-meta.xml` | apiName, masterLabel, templateType, content | Skill |
+| flexipageParser | `flexipages/*.flexipage-meta.xml` | apiName, masterLabel, type, sobjectType | Skill |
+| approvalProcessParser | `approvalProcesses/*.approvalProcess-meta.xml` | fullName, entity, label, active | Skill |
+| genericParser | any `*-meta.xml` (recursive) | apiName, label, fullName, description | Reference (fallback for any type without a dedicated parser above) |
 
 ---
 
 ## Generator
 
-`scripts/node/generator.js` and `scripts/python/generator.py` both export a single function:
+`scripts/node/generator.js` and `scripts/python/generator.py` export:
 
-- **Node:** `generateSkill(metadataType, parsed, config) → string`
-- **Python:** `generate_skill(metadata_type, parsed, config) → str`
+- **Node:** `generateSkill(metadataType, parsed, config) → { skillMd, referenceMd }`, `generateReference(metadataType, parsed, config) → string`, `isSkillType(metadataType) → boolean`, `skillNameFor(metadataType) → string|null`
+- **Python:** `generate_skill(metadata_type, parsed, config) -> dict`, `generate_reference(metadata_type, parsed, config) -> str`, `is_skill_type(metadata_type) -> bool`, `skill_name_for(metadata_type) -> str | None`
 
-Each call produces one Markdown skill file. The forge entry points call the generator once per metadata type and write the result to `generated/{type}.md`.
+For Tier-1 (creatable) types, `generateSkill`/`generate_skill` returns `{skillMd, referenceMd}`, written to `.claude/skills/<skillName>/SKILL.md` and `.claude/skills/<skillName>/references/<slug>-reference.md`. `classes` and `triggers` share the `salesforce-apex` skill — the forge entry points parse both and merge their array fields before calling the generator once, so the second type parsed never overwrites the first's `SKILL.md`. For Tier-2 (reference-only) types, `generateReference`/`generate_reference` returns a single Markdown string written to `generated/reference/<slug>.md`.
 
 ---
 
@@ -178,23 +226,25 @@ Each call produces one Markdown skill file. The forge entry points call the gene
 
 ### When asked to CREATE Salesforce metadata
 
-1. Check if `generated/` contains relevant skill files (e.g. `generated/objects.md` before creating a new object).
-2. If skill files exist, read them to understand naming conventions, field type patterns, sharing models, and design rules for this specific org.
+1. Check if `.claude/skills/` contains a relevant skill (e.g. `.claude/skills/salesforce-objects/SKILL.md` before creating a new object) — Claude Code auto-loads these, so they may already be in context.
+2. Read the skill's `references/<type>-reference.md` for the full org-specific inventory (real naming conventions, field type patterns, sharing models, design rules) if more detail is needed than the `SKILL.md` summary provides.
 3. Generate SFDX source-format XML or Apex that follows the patterns found in those files — not generic Salesforce defaults.
 4. Place generated files in the correct SFDX directory structure under `src/` (or in a path the user specifies).
+5. If the skill seems stale or the org may have changed since the last forge, cross-check current state via the MCP tools configured in `.mcp.json` rather than assuming the skill is current.
 
 ### When asked to FORGE (parse existing metadata)
 
-1. Check `org-config.json` for the source directory.
-2. Run the relevant parsers against the source directory.
-3. Call the generator for each metadata type.
-4. Write output files to `generated/`.
+1. Check `org-config.json` for the source directory and `metadataTypes` list.
+2. Run the relevant dedicated parser for each listed type against the source directory; any other subdirectory found in `src/` is parsed generically and treated as Tier 2.
+3. Call `generateSkill`/`generate_skill` for Tier-1 types (writing `.claude/skills/<name>/SKILL.md` + `references/`), or `generateReference`/`generate_reference` for Tier-2 types (writing `generated/reference/<type>.md`).
+4. `classes` and `triggers` must be merged before generating — see the Generator section above.
 
 ### When adding a new metadata type
 
-1. Add a parser in both `scripts/node/parsers/` and `scripts/python/parsers/`.
-2. Register the new type in `generator.js` and `generator.py` builders map.
-3. Add the new type to the forge entry points (`forge.js`, `forge.py`).
+1. Add a parser in both `scripts/node/parsers/` and `scripts/python/parsers/` (or rely on the generic fallback if a dedicated parser isn't worth building).
+2. To promote it to a full skill (Tier 1), register it in the `SKILL_REGISTRY`/`_SKILL_REGISTRY` map in `generator.js`/`generator.py` with a `skillName` and a builder function returning `{skillMd, referenceMd}`.
+3. Add the new type's parser to the `PARSERS` map in `forge.js`/`forge.py`, and add the type to `metadataTypes` in `org-config.json`.
+4. If it's left out of `metadataTypes`/`PARSERS` entirely, it still gets picked up automatically as a Tier-2 reference doc via the generic-parser auto-detect pass — no registration required for that path.
 
 ### Code standards for this repo
 

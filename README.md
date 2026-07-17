@@ -184,11 +184,13 @@ Each `.claude/skills/<name>/SKILL.md` teaches Claude one metadata type's convent
   "mcpServers": {
     "salesforce": {
       "command": "npx",
-      "args": ["-y", "@salesforce/mcp", "--orgs", "your-alias"]
+      "args": ["-y", "@salesforce/mcp@0.30.14", "--orgs", "your-alias"]
     }
   }
 }
 ```
+The version is pinned deliberately — `npx -y` fetches and executes whatever's published under that spec at run time, so pinning avoids silently running a different version of a third-party-executed package than the one you reviewed. Bump the pinned version intentionally (check the [package's releases](https://github.com/salesforcecli/mcp)) rather than tracking `latest`.
+
 This is independent of the forge scripts (which stay dependency-free) — it just gives Claude live query tools (describe objects, run SOQL, etc.) for the org named in `--orgs`, on top of whatever's been forged into skills from the last `src/` retrieve.
 
 Recommended loop: authenticate (`sf org login web --alias your-alias`) → retrieve into `src/` → run the forge → skills refresh → ask Claude to build, optionally cross-checking live state via the MCP tools.
