@@ -1,0 +1,31 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Salesforce CLI local state (includes org auth tokens — never commit)
+.sf/
+.sfdx/
+
+# Your org's retrieved metadata — keep the placeholder, not the contents
+src/*
+!src/.gitkeep
+
+# IDE
+.vscode/
+
+# Claude Code local overrides (project-level .claude/settings.json is fine to commit)
+.claude/settings.local.json
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
