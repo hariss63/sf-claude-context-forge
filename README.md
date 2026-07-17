@@ -2,6 +2,8 @@
 
 > Turn your Salesforce org metadata into Claude Agent Skills — and use those skills, plus live org access via MCP, to generate new metadata that matches your org's exact patterns.
 
+**New to Salesforce CLI or this tool?** Start with [GETTING_STARTED.md](GETTING_STARTED.md) for a plain-English, no-assumptions walkthrough. The Quick Start below assumes you're already comfortable with `sf` commands.
+
 ---
 
 ## What is this?
