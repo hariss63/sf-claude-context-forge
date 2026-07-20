@@ -54,6 +54,30 @@ def parse_objects(objects_dir: str) -> dict:
                     'length': _extract_tag(fxml, 'length'),
                 })
 
+        obj['validationRules'] = []
+        vr_dir = obj_dir / 'validationRules'
+        if vr_dir.exists():
+            for vf in sorted(vr_dir.glob('*.validationRule-meta.xml')):
+                vxml = vf.read_text(encoding='utf-8')
+                obj['validationRules'].append({
+                    'name':         vf.name.replace('.validationRule-meta.xml', ''),
+                    'active':       _extract_tag(vxml, 'active') != 'false',
+                    'errorMessage': _extract_tag(vxml, 'errorMessage'),
+                    'formula':      _extract_tag(vxml, 'errorConditionFormula'),
+                })
+
+        obj['recordTypes'] = []
+        rt_dir = obj_dir / 'recordTypes'
+        if rt_dir.exists():
+            for rf in sorted(rt_dir.glob('*.recordType-meta.xml')):
+                rxml = rf.read_text(encoding='utf-8')
+                obj['recordTypes'].append({
+                    'name':        rf.name.replace('.recordType-meta.xml', ''),
+                    'label':       _extract_tag(rxml, 'label'),
+                    'active':      _extract_tag(rxml, 'active') != 'false',
+                    'description': _extract_tag(rxml, 'description'),
+                })
+
         objects.append(obj)
 
     return {'objects': objects}

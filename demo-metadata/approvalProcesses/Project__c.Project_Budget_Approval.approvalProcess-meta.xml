@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApprovalProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <active>true</active>
+    <allowRecall>true</allowRecall>
+    <description>Routes projects with budgets over $100,000 to Finance Manager for approval before moving to Active status.</description>
+    <label>Project Budget Approval</label>
+    <entryCriteria>
+        <criteriaItems>
+            <field>Project__c.Budget__c</field>
+            <operation>greaterThan</operation>
+            <value>100000</value>
+        </criteriaItems>
+    </entryCriteria>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <approvalActions>
+            <action>
+                <name>Project_Budget_Approve</name>
+                <type>FieldUpdate</type>
+            </action>
+        </approvalActions>
+        <assignedApprover>
+            <approver>
+                <name>Finance_Manager</name>
+                <type>role</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <label>Finance Manager Approval</label>
+        <name>Finance_Manager_Approval</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <finalApprovalActions>
+        <action>
+            <name>Project_Activate</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalApprovalActions>
+    <finalRejectionActions>
+        <action>
+            <name>Project_Reject</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalRejectionActions>
+    <recordEditability>AdminOrCurrentApprover</recordEditability>
+    <showApprovalHistory>true</showApprovalHistory>
+</ApprovalProcess>

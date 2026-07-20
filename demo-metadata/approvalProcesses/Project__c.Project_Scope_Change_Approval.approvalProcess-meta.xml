@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApprovalProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <active>true</active>
+    <allowRecall>true</allowRecall>
+    <description>Requires Director sign-off when a project end date is extended beyond the original deadline.</description>
+    <label>Project Scope Change Approval</label>
+    <entryCriteria>
+        <formula>ISCHANGED(EndDate__c) &amp;&amp; EndDate__c &gt; PRIORVALUE(EndDate__c)</formula>
+    </entryCriteria>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>Project_Director</name>
+                <type>role</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <label>Director Approval</label>
+        <name>Director_Approval</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <recordEditability>AdminOrCurrentApprover</recordEditability>
+    <showApprovalHistory>true</showApprovalHistory>
+</ApprovalProcess>

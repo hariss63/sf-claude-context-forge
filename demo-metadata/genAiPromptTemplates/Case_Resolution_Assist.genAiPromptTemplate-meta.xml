@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Case Resolution Assist</masterLabel>
+    <templateType>einstein_gpt__caseReply</templateType>
+    <description>Suggests a resolution response for an open support case based on its subject and description.</description>
+    <activeVersion>1</activeVersion>
+    <templateVersions>
+        <content>You are a helpful Salesforce support agent. Draft a professional, empathetic resolution response for the following support case.
+
+Subject: {!$Input:Case.Subject}
+Description: {!$Input:Case.Description}
+Priority: {!$Input:Case.Priority}
+Account: {!$Input:Case.Account.Name}
+
+Keep the response under 150 words and include a clear next step.</content>
+        <status>Active</status>
+        <versionNumber>1</versionNumber>
+    </templateVersions>
+</GenAiPromptTemplate>

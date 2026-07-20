@@ -25,6 +25,15 @@ const SKILL_REGISTRY = {
   genAiPromptTemplates: { skillName: 'salesforce-prompt-templates',   builder: buildPromptTemplateSkill },
   flexipages:           { skillName: 'salesforce-flexipages',         builder: buildFlexipageSkill },
   approvalProcesses:    { skillName: 'salesforce-approval-processes', builder: buildApprovalProcessSkill },
+  globalValueSets:      { skillName: 'salesforce-global-value-sets',  builder: buildGlobalValueSetsSkill },
+  customPermissions:    { skillName: 'salesforce-custom-permissions',  builder: buildCustomPermissionsSkill },
+  assignmentRules:      { skillName: 'salesforce-assignment-rules',   builder: buildAssignmentRulesSkill },
+  applications:         { skillName: 'salesforce-applications',       builder: buildApplicationsSkill },
+  reports:              { skillName: 'salesforce-reports',            builder: buildReportsSkill },
+  dashboards:           { skillName: 'salesforce-dashboards',         builder: buildDashboardsSkill },
+  staticresources:      { skillName: 'salesforce-static-resources',   builder: buildStaticResourcesSkill },
+  namedCredentials:     { skillName: 'salesforce-named-credentials',  builder: buildNamedCredentialsSkill },
+  externalCredentials:  { skillName: 'salesforce-external-credentials', builder: buildExternalCredentialsSkill },
 };
 
 function isSkillType(metadataType) {
@@ -106,6 +115,12 @@ function buildObjectsSkill(parsed, config) {
       for (const f of obj.fields.slice(0, 5)) {
         referenceMd += `  - \`${f.apiName}\` (${f.type})${f.required ? ' — required' : ''}\n`;
       }
+    }
+    if (obj.validationRules?.length) {
+      referenceMd += `- **Validation rules (${obj.validationRules.length}):** ${obj.validationRules.map(r => `\`${r.name}\``).join(', ')}\n`;
+    }
+    if (obj.recordTypes?.length) {
+      referenceMd += `- **Record types:** ${obj.recordTypes.map(r => `\`${r.name}\``).join(', ')}\n`;
     }
     referenceMd += '\n';
   }
@@ -435,6 +450,244 @@ function buildApprovalProcessSkill(parsed, config) {
     referenceMd += '\n';
   }
 
+  return { skillMd, referenceMd };
+}
+
+function buildGlobalValueSetsSkill(parsed, config) {
+  const { valueSets = [] } = parsed;
+  const names = valueSets.map(v => v.masterLabel || v.apiName).filter(Boolean);
+
+  let skillMd = frontmatter(
+    'salesforce-global-value-sets',
+    "This org's shared picklist value sets. Use when creating picklist fields that reference a global value set."
+  );
+  skillMd += `# Global Value Sets\n\n## Value sets in this org\n`;
+  for (const vs of valueSets) {
+    skillMd += `- \`${vs.apiName}\` — ${vs.values?.length || 0} value(s)${vs.sorted ? ' (sorted)' : ''}\n`;
+  }
+  skillMd += `\n## Design rules for new picklist fields\n`;
+  skillMd += `- Prefer referencing an existing global value set over defining inline values\n`;
+  skillMd += `- Add new values to the global set so all fields sharing it stay consistent\n\n`;
+  skillMd += `See \`references/global-value-sets-reference.md\` for the full value inventory.\n`;
+
+  let referenceMd = `# Reference: Global Value Sets (${valueSets.length})\n\n`;
+  for (const vs of valueSets) {
+    referenceMd += `### ${vs.masterLabel || vs.apiName}\n`;
+    referenceMd += `- **API name:** \`${vs.apiName}\`\n`;
+    if (vs.values?.length) {
+      referenceMd += `- **Values:** ${vs.values.map(v => `\`${v.value}\``).join(', ')}\n`;
+    }
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildCustomPermissionsSkill(parsed, config) {
+  const { permissions = [] } = parsed;
+
+  let skillMd = frontmatter(
+    'salesforce-custom-permissions',
+    "This org's custom permissions (feature gates). Use when creating permission sets or checking what feature flags are available."
+  );
+  skillMd += `# Custom Permissions\n\n## Permissions in this org\n`;
+  for (const p of permissions) {
+    skillMd += `- \`${p.apiName}\`${p.label ? ` — ${p.label}` : ''}${p.isSessionActivated ? ' (session-activated)' : ''}\n`;
+  }
+  skillMd += `\n## Design rules\n`;
+  skillMd += `- Custom permissions gate features — assign them via permission sets, not profiles\n`;
+  skillMd += `- Always add a description explaining what feature the permission gates\n\n`;
+  skillMd += `See \`references/custom-permissions-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Custom Permissions (${permissions.length})\n\n`;
+  for (const p of permissions) {
+    referenceMd += `### ${p.label || p.apiName}\n`;
+    referenceMd += `- **API name:** \`${p.apiName}\`\n`;
+    if (p.description) referenceMd += `- **Description:** ${p.description}\n`;
+    if (p.isSessionActivated) referenceMd += `- **Session activated:** yes\n`;
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildAssignmentRulesSkill(parsed, config) {
+  const { rulesets = [] } = parsed;
+  const objects = rulesets.map(r => r.object).filter(Boolean);
+
+  let skillMd = frontmatter(
+    'salesforce-assignment-rules',
+    "This org's assignment rules. Use when creating new assignment rules or routing logic for Cases or Leads."
+  );
+  skillMd += `# Assignment Rules\n\n## Objects with assignment rules\n`;
+  for (const r of rulesets) {
+    skillMd += `- **${r.object}** — ${r.activeRules} active rule(s) of ${r.totalRules} total\n`;
+  }
+  skillMd += `\n## Design rules\n`;
+  skillMd += `- Keep criteria specific — broad rules can incorrectly route records\n`;
+  skillMd += `- Only one rule set per object; order of rules within the set matters\n\n`;
+  skillMd += `See \`references/assignment-rules-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Assignment Rules\n\n`;
+  for (const r of rulesets) {
+    referenceMd += `### ${r.object}\n`;
+    referenceMd += `- **Active rules:** ${r.activeRules} / ${r.totalRules}\n`;
+    for (const rule of r.rules) {
+      referenceMd += `  - \`${rule.name}\` (${rule.active ? 'active' : 'inactive'})\n`;
+    }
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildApplicationsSkill(parsed, config) {
+  const { apps = [] } = parsed;
+  const navTypes = [...new Set(apps.map(a => a.navType).filter(Boolean))];
+
+  let skillMd = frontmatter(
+    'salesforce-applications',
+    "This org's Lightning Apps. Use when creating a new Lightning App or app navigation structure."
+  );
+  skillMd += `# Lightning Applications\n\n## Navigation types in use\n`;
+  for (const t of navTypes) skillMd += `- ${t}\n`;
+  skillMd += `\n## Design rules for new apps\n`;
+  skillMd += `- Match the navType pattern of existing apps (Standard vs Console)\n`;
+  skillMd += `- Always include a label and description\n\n`;
+  skillMd += `See \`references/applications-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Lightning Applications (${apps.length})\n\n`;
+  for (const a of apps) {
+    referenceMd += `### ${a.label || a.apiName}\n`;
+    referenceMd += `- **API name:** \`${a.apiName}\`\n`;
+    if (a.navType)     referenceMd += `- **Nav type:** ${a.navType}\n`;
+    if (a.description) referenceMd += `- **Description:** ${a.description}\n`;
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildReportsSkill(parsed, config) {
+  const { reports = [] } = parsed;
+  const types = [...new Set(reports.map(r => r.reportType).filter(Boolean))];
+
+  let skillMd = frontmatter(
+    'salesforce-reports',
+    "This org's reports. Use as reference when building new reports to match existing formats and types."
+  );
+  skillMd += `# Reports\n\n## Report types in use\n`;
+  for (const t of types) skillMd += `- ${t}\n`;
+  skillMd += `\n## Design rules for new reports\n`;
+  skillMd += `- Use the report types already in use before introducing new ones\n`;
+  skillMd += `- Place reports in descriptive folder names for discoverability\n\n`;
+  skillMd += `See \`references/reports-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Reports (${reports.length})\n\n`;
+  for (const r of reports) {
+    referenceMd += `### ${r.name}\n`;
+    if (r.reportType)  referenceMd += `- **Type:** ${r.reportType}\n`;
+    if (r.format)      referenceMd += `- **Format:** ${r.format}\n`;
+    if (r.description) referenceMd += `- **Description:** ${r.description}\n`;
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildDashboardsSkill(parsed, config) {
+  const { dashboards = [] } = parsed;
+
+  let skillMd = frontmatter(
+    'salesforce-dashboards',
+    "This org's dashboards. Use as reference when building new dashboards."
+  );
+  skillMd += `# Dashboards\n\n## Conventions\n`;
+  skillMd += `- ${dashboards.length} dashboard(s) found in this org\n`;
+  skillMd += `\n## Design rules for new dashboards\n`;
+  skillMd += `- Provide a clear title and description explaining the business question answered\n`;
+  skillMd += `- Dashboards should be placed in a folder matching the owning team or function\n\n`;
+  skillMd += `See \`references/dashboards-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Dashboards (${dashboards.length})\n\n`;
+  for (const d of dashboards) {
+    referenceMd += `### ${d.title || d.name}\n`;
+    if (d.description) referenceMd += `- **Description:** ${d.description}\n`;
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildStaticResourcesSkill(parsed, config) {
+  const { resources = [] } = parsed;
+  const contentTypes = [...new Set(resources.map(r => r.contentType).filter(Boolean))];
+
+  let skillMd = frontmatter(
+    'salesforce-static-resources',
+    "This org's static resources. Use when referencing static assets in LWC or Visualforce."
+  );
+  skillMd += `# Static Resources\n\n## Content types in use\n`;
+  for (const t of contentTypes) skillMd += `- ${t}\n`;
+  skillMd += `\n## Design rules\n`;
+  skillMd += `- Reference static resources with \`$Resource.ResourceName\` in LWC/Aura\n`;
+  skillMd += `- Use \`application/zip\` for multi-file bundles (JS libraries, icon sets)\n\n`;
+  skillMd += `See \`references/static-resources-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Static Resources (${resources.length})\n\n`;
+  for (const r of resources) {
+    referenceMd += `### ${r.apiName}\n`;
+    if (r.contentType)  referenceMd += `- **Content type:** ${r.contentType}\n`;
+    if (r.cacheControl) referenceMd += `- **Cache control:** ${r.cacheControl}\n`;
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildNamedCredentialsSkill(parsed, config) {
+  const { credentials = [] } = parsed;
+  const protocols = [...new Set(credentials.map(c => c.protocol).filter(Boolean))];
+
+  let skillMd = frontmatter(
+    'salesforce-named-credentials',
+    "This org's Named Credentials. Use when making authenticated callouts to external services."
+  );
+  skillMd += `# Named Credentials\n\n## Auth protocols in use\n`;
+  for (const p of protocols) skillMd += `- ${p}\n`;
+  skillMd += `\n## Design rules for new named credentials\n`;
+  skillMd += `- Always use a named credential instead of hardcoding endpoints or secrets in Apex\n`;
+  skillMd += `- Match the principalType and protocol patterns already used in this org\n\n`;
+  skillMd += `See \`references/named-credentials-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: Named Credentials (${credentials.length})\n\n`;
+  for (const c of credentials) {
+    referenceMd += `### ${c.label || c.apiName}\n`;
+    referenceMd += `- **API name:** \`${c.apiName}\`\n`;
+    if (c.endpoint)      referenceMd += `- **Endpoint:** ${c.endpoint}\n`;
+    if (c.protocol)      referenceMd += `- **Protocol:** ${c.protocol}\n`;
+    if (c.principalType) referenceMd += `- **Principal type:** ${c.principalType}\n`;
+    referenceMd += '\n';
+  }
+  return { skillMd, referenceMd };
+}
+
+function buildExternalCredentialsSkill(parsed, config) {
+  const { credentials = [] } = parsed;
+  const protocols = [...new Set(credentials.map(c => c.authenticationProtocol).filter(Boolean))];
+
+  let skillMd = frontmatter(
+    'salesforce-external-credentials',
+    "This org's External Credentials. Use when setting up OAuth or custom auth for external service integrations."
+  );
+  skillMd += `# External Credentials\n\n## Authentication protocols in use\n`;
+  for (const p of protocols) skillMd += `- ${p}\n`;
+  skillMd += `\n## Design rules for new external credentials\n`;
+  skillMd += `- External credentials pair with Named Credentials and External Client Apps\n`;
+  skillMd += `- Match the authenticationProtocol patterns already used in this org\n\n`;
+  skillMd += `See \`references/external-credentials-reference.md\` for the full inventory.\n`;
+
+  let referenceMd = `# Reference: External Credentials (${credentials.length})\n\n`;
+  for (const c of credentials) {
+    referenceMd += `### ${c.label || c.apiName}\n`;
+    referenceMd += `- **API name:** \`${c.apiName}\`\n`;
+    if (c.authenticationProtocol) referenceMd += `- **Protocol:** ${c.authenticationProtocol}\n`;
+    if (c.description)            referenceMd += `- **Description:** ${c.description}\n`;
+    referenceMd += '\n';
+  }
   return { skillMd, referenceMd };
 }
 

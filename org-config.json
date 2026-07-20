@@ -18,7 +18,16 @@
     "connectedApps",
     "genAiPromptTemplates",
     "flexipages",
-    "approvalProcesses"
+    "approvalProcesses",
+    "globalValueSets",
+    "customPermissions",
+    "assignmentRules",
+    "applications",
+    "reports",
+    "dashboards",
+    "staticresources",
+    "namedCredentials",
+    "externalCredentials"
   ],
   "skillFormat": "agent-skills",
   "dryRun": false,

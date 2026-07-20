@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Shows all active projects grouped by status with budget totals.</description>
+    <format>Summary</format>
+    <name>Active Projects by Status</name>
+    <reportType>Project__c</reportType>
+    <showDetails>true</showDetails>
+    <columns>
+        <field>NAME</field>
+    </columns>
+    <columns>
+        <field>Status__c</field>
+    </columns>
+    <columns>
+        <field>Budget__c</field>
+    </columns>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>Status__c</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+</Report>

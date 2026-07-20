@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <defaultLandingTab>standard-Case</defaultLandingTab>
+    <description>Service console application for support agents handling project-related cases.</description>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <label>Project Service Console</label>
+    <navType>Console</navType>
+    <tabs>standard-Case</tabs>
+    <tabs>Project__c</tabs>
+    <tabs>Account__c</tabs>
+    <uiType>Lightning</uiType>
+</CustomApplication>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AssignmentRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <assignmentRule>
+        <fullName>Assign_To_Regional_Manager</fullName>
+        <active>true</active>
+        <ruleEntry>
+            <assignedTo>Regional_Managers</assignedTo>
+            <assignedToType>queue</assignedToType>
+            <criteriaItems>
+                <field>Case.Region__c</field>
+                <operation>equals</operation>
+                <value>North America</value>
+            </criteriaItems>
+        </ruleEntry>
+    </assignmentRule>
+    <assignmentRule>
+        <fullName>Default_Assignment</fullName>
+        <active>true</active>
+        <ruleEntry>
+            <assignedTo>Support_Team</assignedTo>
+            <assignedToType>queue</assignedToType>
+        </ruleEntry>
+    </assignmentRule>
+</AssignmentRules>

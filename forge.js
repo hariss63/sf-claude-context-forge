@@ -19,6 +19,15 @@ const { parseConnectedApps }        = require('./scripts/node/parsers/connectedA
 const { parseGenAiPromptTemplates } = require('./scripts/node/parsers/genAiPromptTemplateParser');
 const { parseFlexipages }           = require('./scripts/node/parsers/flexipageParser');
 const { parseApprovalProcesses }    = require('./scripts/node/parsers/approvalProcessParser');
+const { parseGlobalValueSets }      = require('./scripts/node/parsers/globalValueSetParser');
+const { parseCustomPermissions }    = require('./scripts/node/parsers/customPermissionsParser');
+const { parseAssignmentRules }      = require('./scripts/node/parsers/assignmentRulesParser');
+const { parseApplications }         = require('./scripts/node/parsers/applicationParser');
+const { parseReports }              = require('./scripts/node/parsers/reportParser');
+const { parseDashboards }           = require('./scripts/node/parsers/dashboardParser');
+const { parseStaticResources }      = require('./scripts/node/parsers/staticResourceParser');
+const { parseNamedCredentials }     = require('./scripts/node/parsers/namedCredentialParser');
+const { parseExternalCredentials }  = require('./scripts/node/parsers/externalCredentialParser');
 const { parseGeneric }              = require('./scripts/node/parsers/genericParser');
 const { generateSkill, generateReference, isSkillType, skillNameFor } = require('./scripts/node/generator');
 
@@ -47,6 +56,15 @@ const PARSERS = {
   genAiPromptTemplates: { parser: parseGenAiPromptTemplates,  label: 'Prompt templates' },
   flexipages:           { parser: parseFlexipages,            label: 'FlexiPages' },
   approvalProcesses:    { parser: parseApprovalProcesses,     label: 'Approval Processes' },
+  globalValueSets:      { parser: parseGlobalValueSets,       label: 'Global value sets' },
+  customPermissions:    { parser: parseCustomPermissions,     label: 'Custom permissions' },
+  assignmentRules:      { parser: parseAssignmentRules,       label: 'Assignment rules' },
+  applications:         { parser: parseApplications,          label: 'Lightning apps' },
+  reports:              { parser: parseReports,               label: 'Reports' },
+  dashboards:           { parser: parseDashboards,            label: 'Dashboards' },
+  staticresources:      { parser: parseStaticResources,       label: 'Static resources' },
+  namedCredentials:     { parser: parseNamedCredentials,      label: 'Named credentials' },
+  externalCredentials:  { parser: parseExternalCredentials,   label: 'External credentials' },
 };
 
 async function run() {

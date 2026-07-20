@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Matrix report showing project budget vs actual spend per account.</description>
+    <format>Matrix</format>
+    <name>Budget vs Spend by Account</name>
+    <reportType>Project__c</reportType>
+    <showDetails>false</showDetails>
+    <columns>
+        <field>Budget__c</field>
+    </columns>
+</Report>

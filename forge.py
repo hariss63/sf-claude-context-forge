@@ -24,6 +24,15 @@ from parsers.connected_app_parser          import parse_connected_apps
 from parsers.gen_ai_prompt_template_parser import parse_gen_ai_prompt_templates
 from parsers.flexipage_parser              import parse_flexipages
 from parsers.approval_process_parser       import parse_approval_processes
+from parsers.global_value_set_parser       import parse_global_value_sets
+from parsers.custom_permissions_parser     import parse_custom_permissions
+from parsers.assignment_rules_parser       import parse_assignment_rules
+from parsers.application_parser            import parse_applications
+from parsers.report_parser                 import parse_reports
+from parsers.dashboard_parser              import parse_dashboards
+from parsers.static_resource_parser        import parse_static_resources
+from parsers.named_credential_parser       import parse_named_credentials
+from parsers.external_credential_parser    import parse_external_credentials
 from parsers.generic_parser                import parse_generic
 from generator import generate_skill, generate_reference, is_skill_type, skill_name_for
 
@@ -47,6 +56,15 @@ PARSERS = {
     "genAiPromptTemplates":  (parse_gen_ai_prompt_templates, "Prompt templates"),
     "flexipages":            (parse_flexipages,             "FlexiPages"),
     "approvalProcesses":     (parse_approval_processes,     "Approval Processes"),
+    "globalValueSets":       (parse_global_value_sets,      "Global value sets"),
+    "customPermissions":     (parse_custom_permissions,     "Custom permissions"),
+    "assignmentRules":       (parse_assignment_rules,       "Assignment rules"),
+    "applications":          (parse_applications,           "Lightning apps"),
+    "reports":               (parse_reports,                "Reports"),
+    "dashboards":            (parse_dashboards,             "Dashboards"),
+    "staticresources":       (parse_static_resources,       "Static resources"),
+    "namedCredentials":      (parse_named_credentials,      "Named credentials"),
+    "externalCredentials":   (parse_external_credentials,   "External credentials"),
 }
 
 

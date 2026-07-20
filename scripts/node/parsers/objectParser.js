@@ -69,6 +69,36 @@ async function parseObjects(objectsDir) {
       }
     }
 
+    // Parse validation rule files
+    obj.validationRules = [];
+    const vrDir = path.join(objDir, 'validationRules');
+    if (fs.existsSync(vrDir)) {
+      for (const vf of fs.readdirSync(vrDir).filter(f => f.endsWith('.validationRule-meta.xml'))) {
+        const vxml = fs.readFileSync(path.join(vrDir, vf), 'utf8');
+        obj.validationRules.push({
+          name:         vf.replace('.validationRule-meta.xml', ''),
+          active:       extractTag(vxml, 'active') !== 'false',
+          errorMessage: extractTag(vxml, 'errorMessage'),
+          formula:      extractTag(vxml, 'errorConditionFormula'),
+        });
+      }
+    }
+
+    // Parse record type files
+    obj.recordTypes = [];
+    const rtDir = path.join(objDir, 'recordTypes');
+    if (fs.existsSync(rtDir)) {
+      for (const rf of fs.readdirSync(rtDir).filter(f => f.endsWith('.recordType-meta.xml'))) {
+        const rxml = fs.readFileSync(path.join(rtDir, rf), 'utf8');
+        obj.recordTypes.push({
+          name:        rf.replace('.recordType-meta.xml', ''),
+          label:       extractTag(rxml, 'label'),
+          active:      extractTag(rxml, 'active') !== 'false',
+          description: extractTag(rxml, 'description'),
+        });
+      }
+    }
+
     objects.push(obj);
   }
 

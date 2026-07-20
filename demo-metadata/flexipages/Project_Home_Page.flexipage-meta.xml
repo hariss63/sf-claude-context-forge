@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Project Home Page</masterLabel>
+    <type>AppPage</type>
+    <flexiPageRegions>
+        <name>main</name>
+        <mode>Append</mode>
+        <type>Region</type>
+        <componentInstances>
+            <componentName>force:listView</componentName>
+        </componentInstances>
+        <componentInstances>
+            <componentName>c:projectSummary</componentName>
+        </componentInstances>
+    </flexiPageRegions>
+</FlexiPage>

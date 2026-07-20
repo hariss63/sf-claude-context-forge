@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>UTF-8</encodingKey>
+    <name>Project Kickoff Notification</name>
+    <subject>New Project Kicked Off: {!Project__c.Name}</subject>
+    <textOnly>false</textOnly>
+    <body><![CDATA[Hi {!Contact.FirstName},
+
+We are pleased to inform you that project {!Project__c.Name} has officially kicked off.
+
+Project Manager: {!User.FirstName} {!User.LastName}
+Expected Completion: {!Project__c.EndDate__c}
+
+Thank you for your continued partnership.
+
+Regards,
+The Project Team]]></body>
+</EmailTemplate>

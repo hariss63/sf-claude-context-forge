@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Project Summary</masterLabel>
+    <templateType>einstein_gpt__salesEmail</templateType>
+    <description>Generates a concise executive summary of a project given its status, budget, and key milestones.</description>
+    <activeVersion>1</activeVersion>
+    <templateVersions>
+        <content>You are a project management assistant. Summarize the following project for an executive audience in 3-4 sentences. Focus on status, risks, and next steps.
+
+Project Name: {!$Input:Project__c.Name}
+Status: {!$Input:Project__c.Status__c}
+Budget: {!$Input:Project__c.Budget__c}
+Start Date: {!$Input:Project__c.StartDate__c}
+End Date: {!$Input:Project__c.EndDate__c}
+Description: {!$Input:Project__c.Description__c}</content>
+        <status>Active</status>
+        <versionNumber>1</versionNumber>
+    </templateVersions>
+</GenAiPromptTemplate>

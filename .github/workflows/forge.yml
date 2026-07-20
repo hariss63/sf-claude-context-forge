@@ -1,0 +1,45 @@
+name: sf-claude-context-forge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'demo-metadata/**'
+      - 'org-config.json'
+  workflow_dispatch:
+    inputs:
+      use_demo:
+        description: 'Use demo metadata instead of src/'
+        required: false
+        default: 'false'
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    name: Forge Claude skills from SF metadata
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run forge
+        run: |
+          if [ "${{ github.event.inputs.use_demo }}" = "true" ]; then
+            node forge.js --demo
+          else
+            node forge.js
+          fi
+
+      - name: Commit generated skills
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: regenerate Claude skills from SF metadata [auto]"
+          file_pattern: ".claude/skills/** generated/**"
+          commit_user_name: "sf-claude-context-forge[bot]"
+          commit_user_email: "forge-bot@users.noreply.github.com"

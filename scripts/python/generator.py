@@ -105,6 +105,14 @@ def _build_objects_skill(parsed: dict, config: dict) -> dict:
             for f in fields[:5]:
                 req = ' — required' if f.get('required') else ''
                 ref_lines.append(f"  - `{f['apiName']}` ({f.get('type', '')}){req}")
+        vrs = obj.get('validationRules', [])
+        if vrs:
+            vr_names = ', '.join(f"`{v['name']}`" for v in vrs)
+            ref_lines.append(f"- **Validation rules ({len(vrs)}):** {vr_names}")
+        rts = obj.get('recordTypes', [])
+        if rts:
+            rt_names = ', '.join(f"`{r['name']}`" for r in rts)
+            ref_lines.append(f"- **Record types:** {rt_names}")
         ref_lines.append('')
 
     return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
@@ -491,19 +499,261 @@ def _build_approval_process_skill(parsed: dict, config: dict) -> dict:
     return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
 
 
+def _build_global_value_sets_skill(parsed: dict, config: dict) -> dict:
+    value_sets = parsed.get('valueSets', [])
+    skill_lines = [_frontmatter(
+        'salesforce-global-value-sets',
+        "This org's shared picklist value sets. Use when creating picklist fields that reference a global value set."
+    ).rstrip('\n'), '', '# Global Value Sets', '', '## Value sets in this org']
+    for vs in value_sets:
+        count = len(vs.get('values', []))
+        sorted_tag = ' (sorted)' if vs.get('sorted') else ''
+        skill_lines.append(f"- `{vs['apiName']}` \u2014 {count} value(s){sorted_tag}")
+    skill_lines += [
+        '', '## Design rules for new picklist fields',
+        '- Prefer referencing an existing global value set over defining inline values',
+        '- Add new values to the global set so all fields sharing it stay consistent',
+        '', 'See `references/global-value-sets-reference.md` for the full value inventory.',
+    ]
+    ref_lines = [f'# Reference: Global Value Sets ({len(value_sets)})', '']
+    for vs in value_sets:
+        ref_lines.append(f"### {vs.get('masterLabel') or vs['apiName']}")
+        ref_lines.append(f"- **API name:** `{vs['apiName']}`")
+        vals = vs.get('values', [])
+        if vals:
+            ref_lines.append(f"- **Values:** {', '.join(f'`{v[\"value\"]}`' for v in vals if v.get('value'))}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_custom_permissions_skill(parsed: dict, config: dict) -> dict:
+    permissions = parsed.get('permissions', [])
+    skill_lines = [_frontmatter(
+        'salesforce-custom-permissions',
+        "This org's custom permissions (feature gates). Use when creating permission sets or checking what feature flags are available."
+    ).rstrip('\n'), '', '# Custom Permissions', '', '## Permissions in this org']
+    for p in permissions:
+        label = f" \u2014 {p['label']}" if p.get('label') else ''
+        session = ' (session-activated)' if p.get('isSessionActivated') else ''
+        skill_lines.append(f"- `{p['apiName']}`{label}{session}")
+    skill_lines += [
+        '', '## Design rules',
+        '- Custom permissions gate features \u2014 assign them via permission sets, not profiles',
+        '- Always add a description explaining what feature the permission gates',
+        '', 'See `references/custom-permissions-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Custom Permissions ({len(permissions)})', '']
+    for p in permissions:
+        ref_lines.append(f"### {p.get('label') or p['apiName']}")
+        ref_lines.append(f"- **API name:** `{p['apiName']}`")
+        if p.get('description'):
+            ref_lines.append(f"- **Description:** {p['description']}")
+        if p.get('isSessionActivated'):
+            ref_lines.append('- **Session activated:** yes')
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_assignment_rules_skill(parsed: dict, config: dict) -> dict:
+    rulesets = parsed.get('rulesets', [])
+    skill_lines = [_frontmatter(
+        'salesforce-assignment-rules',
+        "This org's assignment rules. Use when creating new assignment rules or routing logic for Cases or Leads."
+    ).rstrip('\n'), '', '# Assignment Rules', '', '## Objects with assignment rules']
+    for r in rulesets:
+        skill_lines.append(f"- **{r['object']}** \u2014 {r['activeRules']} active rule(s) of {r['totalRules']} total")
+    skill_lines += [
+        '', '## Design rules',
+        '- Keep criteria specific \u2014 broad rules can incorrectly route records',
+        '- Only one rule set per object; order of rules within the set matters',
+        '', 'See `references/assignment-rules-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Assignment Rules', '']
+    for r in rulesets:
+        ref_lines.append(f"### {r['object']}")
+        ref_lines.append(f"- **Active rules:** {r['activeRules']} / {r['totalRules']}")
+        for rule in r.get('rules', []):
+            status = 'active' if rule.get('active') else 'inactive'
+            ref_lines.append(f"  - `{rule['name']}` ({status})")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_applications_skill(parsed: dict, config: dict) -> dict:
+    apps = parsed.get('apps', [])
+    nav_types = list(dict.fromkeys(a['navType'] for a in apps if a.get('navType')))
+    skill_lines = [_frontmatter(
+        'salesforce-applications',
+        "This org's Lightning Apps. Use when creating a new Lightning App or app navigation structure."
+    ).rstrip('\n'), '', '# Lightning Applications', '', '## Navigation types in use']
+    skill_lines += [f'- {t}' for t in nav_types]
+    skill_lines += [
+        '', '## Design rules for new apps',
+        '- Match the navType pattern of existing apps (Standard vs Console)',
+        '- Always include a label and description',
+        '', 'See `references/applications-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Lightning Applications ({len(apps)})', '']
+    for a in apps:
+        ref_lines.append(f"### {a.get('label') or a['apiName']}")
+        ref_lines.append(f"- **API name:** `{a['apiName']}`")
+        if a.get('navType'):
+            ref_lines.append(f"- **Nav type:** {a['navType']}")
+        if a.get('description'):
+            ref_lines.append(f"- **Description:** {a['description']}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_reports_skill(parsed: dict, config: dict) -> dict:
+    reports = parsed.get('reports', [])
+    types = list(dict.fromkeys(r['reportType'] for r in reports if r.get('reportType')))
+    skill_lines = [_frontmatter(
+        'salesforce-reports',
+        "This org's reports. Use as reference when building new reports to match existing formats and types."
+    ).rstrip('\n'), '', '# Reports', '', '## Report types in use']
+    skill_lines += [f'- {t}' for t in types]
+    skill_lines += [
+        '', '## Design rules for new reports',
+        '- Use the report types already in use before introducing new ones',
+        '- Place reports in descriptive folder names for discoverability',
+        '', 'See `references/reports-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Reports ({len(reports)})', '']
+    for r in reports:
+        ref_lines.append(f"### {r['name']}")
+        if r.get('reportType'):
+            ref_lines.append(f"- **Type:** {r['reportType']}")
+        if r.get('format'):
+            ref_lines.append(f"- **Format:** {r['format']}")
+        if r.get('description'):
+            ref_lines.append(f"- **Description:** {r['description']}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_dashboards_skill(parsed: dict, config: dict) -> dict:
+    dashboards = parsed.get('dashboards', [])
+    skill_lines = [_frontmatter(
+        'salesforce-dashboards',
+        "This org's dashboards. Use as reference when building new dashboards."
+    ).rstrip('\n'), '', '# Dashboards', '', '## Conventions',
+        f'- {len(dashboards)} dashboard(s) found in this org',
+        '', '## Design rules for new dashboards',
+        '- Provide a clear title and description explaining the business question answered',
+        '- Dashboards should be placed in a folder matching the owning team or function',
+        '', 'See `references/dashboards-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Dashboards ({len(dashboards)})', '']
+    for d in dashboards:
+        ref_lines.append(f"### {d.get('title') or d['name']}")
+        if d.get('description'):
+            ref_lines.append(f"- **Description:** {d['description']}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_static_resources_skill(parsed: dict, config: dict) -> dict:
+    resources = parsed.get('resources', [])
+    content_types = list(dict.fromkeys(r['contentType'] for r in resources if r.get('contentType')))
+    skill_lines = [_frontmatter(
+        'salesforce-static-resources',
+        "This org's static resources. Use when referencing static assets in LWC or Visualforce."
+    ).rstrip('\n'), '', '# Static Resources', '', '## Content types in use']
+    skill_lines += [f'- {t}' for t in content_types]
+    skill_lines += [
+        '', '## Design rules',
+        '- Reference static resources with `$Resource.ResourceName` in LWC/Aura',
+        '- Use `application/zip` for multi-file bundles (JS libraries, icon sets)',
+        '', 'See `references/static-resources-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Static Resources ({len(resources)})', '']
+    for r in resources:
+        ref_lines.append(f"### {r['apiName']}")
+        if r.get('contentType'):
+            ref_lines.append(f"- **Content type:** {r['contentType']}")
+        if r.get('cacheControl'):
+            ref_lines.append(f"- **Cache control:** {r['cacheControl']}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_named_credentials_skill(parsed: dict, config: dict) -> dict:
+    credentials = parsed.get('credentials', [])
+    protocols = list(dict.fromkeys(c['protocol'] for c in credentials if c.get('protocol')))
+    skill_lines = [_frontmatter(
+        'salesforce-named-credentials',
+        "This org's Named Credentials. Use when making authenticated callouts to external services."
+    ).rstrip('\n'), '', '# Named Credentials', '', '## Auth protocols in use']
+    skill_lines += [f'- {p}' for p in protocols]
+    skill_lines += [
+        '', '## Design rules for new named credentials',
+        '- Always use a named credential instead of hardcoding endpoints or secrets in Apex',
+        '- Match the principalType and protocol patterns already used in this org',
+        '', 'See `references/named-credentials-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: Named Credentials ({len(credentials)})', '']
+    for c in credentials:
+        ref_lines.append(f"### {c.get('label') or c['apiName']}")
+        ref_lines.append(f"- **API name:** `{c['apiName']}`")
+        if c.get('endpoint'):
+            ref_lines.append(f"- **Endpoint:** {c['endpoint']}")
+        if c.get('protocol'):
+            ref_lines.append(f"- **Protocol:** {c['protocol']}")
+        if c.get('principalType'):
+            ref_lines.append(f"- **Principal type:** {c['principalType']}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
+def _build_external_credentials_skill(parsed: dict, config: dict) -> dict:
+    credentials = parsed.get('credentials', [])
+    protocols = list(dict.fromkeys(c['authenticationProtocol'] for c in credentials if c.get('authenticationProtocol')))
+    skill_lines = [_frontmatter(
+        'salesforce-external-credentials',
+        "This org's External Credentials. Use when setting up OAuth or custom auth for external service integrations."
+    ).rstrip('\n'), '', '# External Credentials', '', '## Authentication protocols in use']
+    skill_lines += [f'- {p}' for p in protocols]
+    skill_lines += [
+        '', '## Design rules for new external credentials',
+        '- External credentials pair with Named Credentials and External Client Apps',
+        '- Match the authenticationProtocol patterns already used in this org',
+        '', 'See `references/external-credentials-reference.md` for the full inventory.',
+    ]
+    ref_lines = [f'# Reference: External Credentials ({len(credentials)})', '']
+    for c in credentials:
+        ref_lines.append(f"### {c.get('label') or c['apiName']}")
+        ref_lines.append(f"- **API name:** `{c['apiName']}`")
+        if c.get('authenticationProtocol'):
+            ref_lines.append(f"- **Protocol:** {c['authenticationProtocol']}")
+        if c.get('description'):
+            ref_lines.append(f"- **Description:** {c['description']}")
+        ref_lines.append('')
+    return {'skillMd': '\n'.join(skill_lines) + '\n', 'referenceMd': '\n'.join(ref_lines) + '\n'}
+
+
 _SKILL_REGISTRY = {
-    'objects':              {'skillName': 'salesforce-objects',            'builder': _build_objects_skill},
-    'flows':                {'skillName': 'salesforce-flows',              'builder': _build_flows_skill},
-    'classes':              {'skillName': 'salesforce-apex',               'builder': _build_apex_skill},
-    'triggers':             {'skillName': 'salesforce-apex',               'builder': _build_apex_skill},
-    'lwc':                  {'skillName': 'salesforce-lwc',                'builder': _build_lwc_skill},
-    'permissionsets':       {'skillName': 'salesforce-permission-sets',    'builder': _build_permset_skill},
-    'profiles':              {'skillName': 'salesforce-profiles',           'builder': _build_profile_skill},
-    'layouts':               {'skillName': 'salesforce-layouts',            'builder': _build_layout_skill},
-    'emailTemplates':        {'skillName': 'salesforce-email-templates',    'builder': _build_template_skill},
-    'customMetadata':        {'skillName': 'salesforce-custom-metadata',    'builder': _build_custom_metadata_skill},
-    'connectedApps':         {'skillName': 'salesforce-connected-apps',     'builder': _build_connected_app_skill},
-    'genAiPromptTemplates':  {'skillName': 'salesforce-prompt-templates',   'builder': _build_prompt_template_skill},
-    'flexipages':            {'skillName': 'salesforce-flexipages',         'builder': _build_flexipage_skill},
-    'approvalProcesses':     {'skillName': 'salesforce-approval-processes', 'builder': _build_approval_process_skill},
+    'objects':              {'skillName': 'salesforce-objects',              'builder': _build_objects_skill},
+    'flows':                {'skillName': 'salesforce-flows',                'builder': _build_flows_skill},
+    'classes':              {'skillName': 'salesforce-apex',                 'builder': _build_apex_skill},
+    'triggers':             {'skillName': 'salesforce-apex',                 'builder': _build_apex_skill},
+    'lwc':                  {'skillName': 'salesforce-lwc',                  'builder': _build_lwc_skill},
+    'permissionsets':       {'skillName': 'salesforce-permission-sets',      'builder': _build_permset_skill},
+    'profiles':              {'skillName': 'salesforce-profiles',             'builder': _build_profile_skill},
+    'layouts':               {'skillName': 'salesforce-layouts',              'builder': _build_layout_skill},
+    'emailTemplates':        {'skillName': 'salesforce-email-templates',      'builder': _build_template_skill},
+    'customMetadata':        {'skillName': 'salesforce-custom-metadata',      'builder': _build_custom_metadata_skill},
+    'connectedApps':         {'skillName': 'salesforce-connected-apps',       'builder': _build_connected_app_skill},
+    'genAiPromptTemplates':  {'skillName': 'salesforce-prompt-templates',     'builder': _build_prompt_template_skill},
+    'flexipages':            {'skillName': 'salesforce-flexipages',           'builder': _build_flexipage_skill},
+    'approvalProcesses':     {'skillName': 'salesforce-approval-processes',   'builder': _build_approval_process_skill},
+    'globalValueSets':       {'skillName': 'salesforce-global-value-sets',    'builder': _build_global_value_sets_skill},
+    'customPermissions':     {'skillName': 'salesforce-custom-permissions',   'builder': _build_custom_permissions_skill},
+    'assignmentRules':       {'skillName': 'salesforce-assignment-rules',     'builder': _build_assignment_rules_skill},
+    'applications':          {'skillName': 'salesforce-applications',         'builder': _build_applications_skill},
+    'reports':               {'skillName': 'salesforce-reports',              'builder': _build_reports_skill},
+    'dashboards':            {'skillName': 'salesforce-dashboards',           'builder': _build_dashboards_skill},
+    'staticresources':       {'skillName': 'salesforce-static-resources',     'builder': _build_static_resources_skill},
+    'namedCredentials':      {'skillName': 'salesforce-named-credentials',    'builder': _build_named_credentials_skill},
+    'externalCredentials':   {'skillName': 'salesforce-external-credentials', 'builder': _build_external_credentials_skill},
 }

@@ -12,6 +12,9 @@ venv/
 .sf/
 .sfdx/
 
+# Default SFDX package directory — this project uses src/, not force-app/
+force-app/
+
 # Your org's retrieved metadata — keep the placeholder, not the contents
 src/*
 !src/.gitkeep

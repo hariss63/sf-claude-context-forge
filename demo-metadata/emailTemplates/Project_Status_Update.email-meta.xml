@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>UTF-8</encodingKey>
+    <name>Project Status Update</name>
+    <subject>Project Update: {!Project__c.Name} — Status Changed to {!Project__c.Status__c}</subject>
+    <textOnly>false</textOnly>
+    <body><![CDATA[Hi {!Contact.FirstName},
+
+The status of project {!Project__c.Name} has been updated to {!Project__c.Status__c}.
+
+Start Date: {!Project__c.StartDate__c}
+End Date: {!Project__c.EndDate__c}
+
+Please log in to Salesforce for full details.
+
+Regards,
+{!User.FirstName} {!User.LastName}]]></body>
+</EmailTemplate>
