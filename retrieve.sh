@@ -101,32 +101,47 @@ echo "Retrieving metadata from '$ALIAS' into src/ ..."
 echo "(This may take a minute or two depending on your org size)"
 echo ""
 
-# ── Retrieve all metadata types the forge supports ───────────────────────────
+# ── Generate a package.xml manifest and retrieve with it ─────────────────────
+# Using --manifest is more reliable than --metadata across CLI versions —
+# it retrieves directly into src/ (the default package dir in sfdx-project.json)
+# without creating a main/default subdirectory.
+MANIFEST_FILE="$(mktemp /tmp/sf-forge-package-XXXX.xml)"
+
+cat > "$MANIFEST_FILE" << 'PACKAGE_XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+  <types><members>*</members><name>ApexClass</name></types>
+  <types><members>*</members><name>ApexTrigger</name></types>
+  <types><members>*</members><name>ApprovalProcess</name></types>
+  <types><members>*</members><name>AssignmentRules</name></types>
+  <types><members>*</members><name>ConnectedApp</name></types>
+  <types><members>*</members><name>CustomApplication</name></types>
+  <types><members>*</members><name>CustomMetadata</name></types>
+  <types><members>*</members><name>CustomObject</name></types>
+  <types><members>*</members><name>CustomPermission</name></types>
+  <types><members>*</members><name>Dashboard</name></types>
+  <types><members>*</members><name>EmailTemplate</name></types>
+  <types><members>*</members><name>ExternalCredential</name></types>
+  <types><members>*</members><name>FlexiPage</name></types>
+  <types><members>*</members><name>Flow</name></types>
+  <types><members>*</members><name>GenAiPromptTemplate</name></types>
+  <types><members>*</members><name>GlobalValueSet</name></types>
+  <types><members>*</members><name>Layout</name></types>
+  <types><members>*</members><name>LightningComponentBundle</name></types>
+  <types><members>*</members><name>NamedCredential</name></types>
+  <types><members>*</members><name>PermissionSet</name></types>
+  <types><members>*</members><name>Profile</name></types>
+  <types><members>*</members><name>Report</name></types>
+  <types><members>*</members><name>StaticResource</name></types>
+  <version>62.0</version>
+</Package>
+PACKAGE_XML
+
 sf project retrieve start \
   --target-org "$ALIAS" \
-  --metadata CustomObject \
-  --metadata ApexClass \
-  --metadata ApexTrigger \
-  --metadata Flow \
-  --metadata LightningComponentBundle \
-  --metadata PermissionSet \
-  --metadata Profile \
-  --metadata Layout \
-  --metadata EmailTemplate \
-  --metadata CustomMetadata \
-  --metadata ConnectedApp \
-  --metadata GenAiPromptTemplate \
-  --metadata FlexiPage \
-  --metadata ApprovalProcess \
-  --metadata GlobalValueSet \
-  --metadata CustomPermission \
-  --metadata AssignmentRules \
-  --metadata CustomApplication \
-  --metadata Report \
-  --metadata Dashboard \
-  --metadata StaticResource \
-  --metadata NamedCredential \
-  --metadata ExternalCredential
+  --manifest "$MANIFEST_FILE"
+
+rm -f "$MANIFEST_FILE"
 
 echo ""
 echo "Retrieve complete. src/ is now populated with your org's metadata."
