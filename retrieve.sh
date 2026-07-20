@@ -37,38 +37,65 @@ if [[ -z "$ALIAS" ]] && command -v node &>/dev/null; then
   ALIAS=$(node -e "const c=require('./org-config.json'); console.log(c.orgAlias||'')" 2>/dev/null || echo "")
 fi
 
-# ── If alias is missing/placeholder, try to find an already-authenticated org ─
-if [[ -z "$ALIAS" || "$ALIAS" == "my-alias" ]]; then
-  # Look for a default org set via `sf config set target-org`
-  DEFAULT_ORG=$(sf config get target-org --json 2>/dev/null \
-    | node -e "let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{try{const r=JSON.parse(d);console.log(r.result?.[0]?.value||'')}catch{console.log('')}})" 2>/dev/null || echo "")
+# ── Verify the alias actually exists in sf org list; if not, auto-detect ──────
+ORG_LIST=$(sf org list --json 2>/dev/null || echo "{}")
+
+_alias_is_authenticated() {
+  local a="$1"
+  echo "$ORG_LIST" | node -e "
+    let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
+      try {
+        const r=JSON.parse(d);
+        const all=[...(r.result?.nonScratchOrgs||[]),...(r.result?.scratchOrgs||[])];
+        console.log(all.some(o=>o.alias==='$a'||o.username==='$a')?'yes':'no');
+      } catch(e){ console.log('no'); }
+    });
+  " 2>/dev/null || echo "no"
+}
+
+if [[ -n "$ALIAS" ]] && [[ "$(_alias_is_authenticated "$ALIAS")" != "yes" ]]; then
+  echo "Note: org alias '$ALIAS' (from org-config.json) is not in your authenticated orgs."
+  ALIAS=""  # fall through to auto-detect below
+fi
+
+# ── If alias is missing or not authenticated, detect from sf org list ─────────
+if [[ -z "$ALIAS" ]]; then
+  # Try: org explicitly marked as default username
+  DEFAULT_ORG=$(echo "$ORG_LIST" | node -e "
+    let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
+      try {
+        const r=JSON.parse(d);
+        const all=[...(r.result?.nonScratchOrgs||[]),...(r.result?.scratchOrgs||[])];
+        const def=all.find(o=>o.isDefaultUsername||o.isDefaultDevHubUsername);
+        console.log(def?.alias||def?.username||'');
+      } catch(e){ console.log(''); }
+    });
+  " 2>/dev/null || echo "")
 
   if [[ -n "$DEFAULT_ORG" ]]; then
     ALIAS="$DEFAULT_ORG"
-    echo "Using default org: $ALIAS"
+    echo "Found default org: $ALIAS"
   else
-    echo "No default org found. Enter the alias for your Salesforce org."
-    echo "(A nickname you choose — e.g. 'my-org', 'dev-sandbox', 'production')"
-    read -rp "Alias: " ALIAS
+    # No default — show what's available and ask
+    echo "Authenticated orgs:"
+    echo "$ORG_LIST" | node -e "
+      let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
+        try {
+          const r=JSON.parse(d);
+          const all=[...(r.result?.nonScratchOrgs||[]),...(r.result?.scratchOrgs||[])];
+          if(all.length===0){ console.log('  (none — you need to run: sf org login web --alias <name>)'); return; }
+          all.forEach((o,i)=>console.log('  '+(i+1)+'. '+(o.alias||o.username)));
+        } catch(e){ console.log('  (unable to list)'); }
+      });
+    " 2>/dev/null || true
+    echo ""
+    read -rp "Enter the alias to use: " ALIAS
   fi
 fi
 
-# ── Check if this org is already authenticated ────────────────────────────────
+# ── At this point ALIAS is confirmed authenticated ────────────────────────────
 echo ""
-if sf org display --target-org "$ALIAS" &>/dev/null 2>&1; then
-  # ── OPTION 1: Already authenticated — go straight to retrieve ────────────
-  echo "✓ Org '$ALIAS' is already authenticated. Skipping login."
-else
-  # ── OPTION 2: Not authenticated — authorize first ────────────────────────
-  echo "Org '$ALIAS' is not authenticated."
-  echo ""
-  echo "Opening a browser window — log in to your Salesforce org normally,"
-  echo "then come back to this terminal."
-  echo ""
-  sf org login web --alias "$ALIAS"
-  echo ""
-  echo "✓ Authorization complete."
-fi
+echo "✓ Org '$ALIAS' is ready."
 
 echo "Retrieving metadata from '$ALIAS' into src/ ..."
 echo "(This may take a minute or two depending on your org size)"
