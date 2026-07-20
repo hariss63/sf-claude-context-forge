@@ -104,11 +104,29 @@ echo ""
 # ── Retrieve all metadata types the forge supports ───────────────────────────
 sf project retrieve start \
   --target-org "$ALIAS" \
-  --metadata "CustomObject,ApexClass,ApexTrigger,Flow,LightningComponentBundle,\
-PermissionSet,Profile,Layout,EmailTemplate,CustomMetadata,ConnectedApp,\
-GenAiPromptTemplate,FlexiPage,ApprovalProcess,GlobalValueSet,CustomPermission,\
-AssignmentRules,CustomApplication,Report,Dashboard,StaticResource,\
-NamedCredential,ExternalCredential"
+  --metadata CustomObject \
+  --metadata ApexClass \
+  --metadata ApexTrigger \
+  --metadata Flow \
+  --metadata LightningComponentBundle \
+  --metadata PermissionSet \
+  --metadata Profile \
+  --metadata Layout \
+  --metadata EmailTemplate \
+  --metadata CustomMetadata \
+  --metadata ConnectedApp \
+  --metadata GenAiPromptTemplate \
+  --metadata FlexiPage \
+  --metadata ApprovalProcess \
+  --metadata GlobalValueSet \
+  --metadata CustomPermission \
+  --metadata AssignmentRules \
+  --metadata CustomApplication \
+  --metadata Report \
+  --metadata Dashboard \
+  --metadata StaticResource \
+  --metadata NamedCredential \
+  --metadata ExternalCredential
 
 echo ""
 echo "Retrieve complete. src/ is now populated with your org's metadata."
