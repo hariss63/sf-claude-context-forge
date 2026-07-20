@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# retrieve.sh — Log in to your Salesforce org, pull metadata into src/, then run the forge.
+# retrieve.sh — Retrieve Salesforce metadata into src/, then run the forge.
+#
+# Two paths:
+#   • Org already authenticated → goes straight to retrieve
+#   • Org not authenticated     → asks you to authorize first, then retrieves
+#
 # Usage:
 #   ./retrieve.sh                  # uses orgAlias from org-config.json
 #   ./retrieve.sh --alias my-org   # override the alias
@@ -14,42 +19,55 @@ RUN_FORGE=true
 # ── Parse args ───────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --alias)   ALIAS="$2"; shift 2 ;;
+    --alias)      ALIAS="$2"; shift 2 ;;
     --skip-forge) RUN_FORGE=false; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
 
-# ── Read alias from org-config.json if not passed ────────────────────────────
-if [[ -z "$ALIAS" ]]; then
-  if command -v node &>/dev/null; then
-    ALIAS=$(node -e "const c=require('./org-config.json'); console.log(c.orgAlias||'')" 2>/dev/null || echo "")
-  fi
-fi
-
 # ── Check that sf CLI is installed ───────────────────────────────────────────
 if ! command -v sf &>/dev/null; then
-  echo "Salesforce CLI not found."
-  echo "Installing via npm..."
+  echo "Salesforce CLI not found. Installing via npm..."
   npm install --global @salesforce/cli
   echo ""
 fi
 
-# ── Ask for alias if still empty or still the placeholder ────────────────────
-if [[ -z "$ALIAS" || "$ALIAS" == "my-alias" ]]; then
-  echo "What alias did you use when you logged into your Salesforce org?"
-  echo "(This is the nickname from: sf org login web --alias <nickname>)"
-  read -rp "Alias: " ALIAS
+# ── Read alias from org-config.json if not passed on CLI ─────────────────────
+if [[ -z "$ALIAS" ]] && command -v node &>/dev/null; then
+  ALIAS=$(node -e "const c=require('./org-config.json'); console.log(c.orgAlias||'')" 2>/dev/null || echo "")
 fi
 
-# ── Log in if the org isn't already authenticated ────────────────────────────
-if ! sf org display --target-org "$ALIAS" &>/dev/null 2>&1; then
+# ── If alias is missing/placeholder, try to find an already-authenticated org ─
+if [[ -z "$ALIAS" || "$ALIAS" == "my-alias" ]]; then
+  # Look for a default org set via `sf config set target-org`
+  DEFAULT_ORG=$(sf config get target-org --json 2>/dev/null \
+    | node -e "let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{try{const r=JSON.parse(d);console.log(r.result?.[0]?.value||'')}catch{console.log('')}})" 2>/dev/null || echo "")
+
+  if [[ -n "$DEFAULT_ORG" ]]; then
+    ALIAS="$DEFAULT_ORG"
+    echo "Using default org: $ALIAS"
+  else
+    echo "No default org found. Enter the alias for your Salesforce org."
+    echo "(A nickname you choose — e.g. 'my-org', 'dev-sandbox', 'production')"
+    read -rp "Alias: " ALIAS
+  fi
+fi
+
+# ── Check if this org is already authenticated ────────────────────────────────
+echo ""
+if sf org display --target-org "$ALIAS" &>/dev/null 2>&1; then
+  # ── OPTION 1: Already authenticated — go straight to retrieve ────────────
+  echo "✓ Org '$ALIAS' is already authenticated. Skipping login."
+else
+  # ── OPTION 2: Not authenticated — authorize first ────────────────────────
+  echo "Org '$ALIAS' is not authenticated."
   echo ""
-  echo "No authenticated session found for '$ALIAS'."
-  echo "Opening browser to log in — sign in normally, then come back here."
+  echo "Opening a browser window — log in to your Salesforce org normally,"
+  echo "then come back to this terminal."
   echo ""
   sf org login web --alias "$ALIAS"
   echo ""
+  echo "✓ Authorization complete."
 fi
 
 echo "Retrieving metadata from '$ALIAS' into src/ ..."
