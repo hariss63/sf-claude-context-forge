@@ -11,10 +11,10 @@
 `sf-claude-context-forge` is an open-source tool for Salesforce developers using Claude Code. It does three things:
 
 **Workflow 1 — Forge skills from your org**
-Drop your SFDX metadata into `src/`. Run one command. The forge reads every metadata type it can find — 14 metadata types get a dedicated parser, everything else falls back to a generic parser — and writes native Claude Agent Skills into `.claude/skills/`, auto-loaded by Claude Code the moment you open this project. Low-value config metadata (certs, CORS origins, auth providers, etc.) gets a plain reference doc under `generated/reference/` instead of a full skill.
+Drop your SFDX metadata into `src/`. Run one command. The forge reads every metadata type it can find — 23 metadata types get a dedicated parser, everything else falls back to a generic parser — and writes native Claude Agent Skills into `.claude/skills/`, auto-loaded by Claude Code the moment you open this project. Low-value config metadata (certs, CORS origins, auth providers, etc.) gets a plain reference doc under `generated/reference/` instead of a full skill.
 
 **Workflow 2 — Generate new metadata using your org as the pattern**
-With the skills auto-loaded, describe what you want in plain English. Claude reads the relevant skill and produces new Apex classes, Flows, LWC components, custom objects, Custom Metadata records, Connected Apps, Prompt Builder templates, FlexiPages, Approval Processes, and more — built to match your org's exact style, not a generic template.
+With the skills auto-loaded, describe what you want in plain English. Claude reads the relevant skill and produces new Apex classes, Flows, LWC components, custom objects, Custom Metadata records, Connected Apps, Prompt Builder templates, FlexiPages, Approval Processes, Global Value Sets, Named Credentials, and more — built to match your org's exact style, not a generic template.
 
 **Workflow 3 — Query your live org via MCP**
 `.mcp.json` wires up the official [Salesforce DX MCP Server](https://github.com/salesforcecli/mcp) (`@salesforce/mcp`), giving Claude live org query tools (describe objects, run SOQL, etc.) alongside the static skills from the forge step.
@@ -121,7 +121,16 @@ sf-claude-context-forge/
 │       ├── salesforce-connected-apps/
 │       ├── salesforce-prompt-templates/
 │       ├── salesforce-flexipages/
-│       └── salesforce-approval-processes/
+        ├── salesforce-approval-processes/
+        ├── salesforce-global-value-sets/
+        ├── salesforce-custom-permissions/
+        ├── salesforce-assignment-rules/
+        ├── salesforce-applications/
+        ├── salesforce-reports/
+        ├── salesforce-dashboards/
+        ├── salesforce-static-resources/
+        ├── salesforce-named-credentials/
+        └── salesforce-external-credentials/
 │
 ├── generated/
 │   └── reference/                # Output — plain reference docs for non-creatable types
@@ -158,7 +167,10 @@ Configure the forge for your org:
     "objects", "flows", "classes", "triggers", "lwc",
     "permissionsets", "profiles", "layouts", "emailTemplates",
     "customMetadata", "connectedApps", "genAiPromptTemplates",
-    "flexipages", "approvalProcesses"
+    "flexipages", "approvalProcesses", "globalValueSets",
+    "customPermissions", "assignmentRules", "applications",
+    "reports", "dashboards", "staticresources",
+    "namedCredentials", "externalCredentials"
   ],
   "skillFormat": "agent-skills",
   "dryRun": false,

@@ -4,9 +4,9 @@
 
 sf-claude-context-forge is a code-generation scaffold for Salesforce developers working with Claude Code. It operates in three phases:
 
-1. **Forge phase** — reads real Salesforce SFDX metadata from `src/` (or `demo-metadata/`), parses it, and generates native Claude Agent Skills into `.claude/skills/`. 14 metadata types (objects, flows, classes, triggers, lwc, permissionsets, profiles, layouts, emailTemplates, customMetadata, connectedApps, genAiPromptTemplates, flexipages, approvalProcesses) get a dedicated `SKILL.md` + `references/<type>-reference.md`. Any other metadata type found in `src/` falls back to a generic parser and is written as a plain reference doc under `generated/reference/` instead of a full skill. These skills teach Claude the org's actual naming conventions, object model, Apex patterns, Flow structures, and component architecture.
+1. **Forge phase** — reads real Salesforce SFDX metadata from `src/` (or `demo-metadata/`), parses it, and generates native Claude Agent Skills into `.claude/skills/`. 23 metadata types (objects, flows, classes, triggers, lwc, permissionsets, profiles, layouts, emailTemplates, customMetadata, connectedApps, genAiPromptTemplates, flexipages, approvalProcesses, globalValueSets, customPermissions, assignmentRules, applications, reports, dashboards, staticresources, namedCredentials, externalCredentials) get a dedicated `SKILL.md` + `references/<type>-reference.md`. Any other metadata type found in `src/` falls back to a generic parser and is written as a plain reference doc under `generated/reference/` instead of a full skill. These skills teach Claude the org's actual naming conventions, object model, Apex patterns, Flow structures, and component architecture.
 
-2. **Create phase** — once Claude Code has auto-loaded the skills under `.claude/skills/`, you ask it to create new Salesforce metadata (objects, fields, Apex classes, Flows, LWC components, Custom Metadata records, Connected Apps, Prompt Builder templates, and more) and it follows the org's real patterns automatically instead of generating generic boilerplate.
+2. **Create phase** — once Claude Code has auto-loaded the skills under `.claude/skills/`, you ask it to create new Salesforce metadata (objects, fields, Apex classes, Flows, LWC components, Custom Metadata records, Connected Apps, Prompt Builder templates, Global Value Sets, Named Credentials, and more) and it follows the org's real patterns automatically instead of generating generic boilerplate.
 
 3. **Live query phase** — `.mcp.json` wires up the official Salesforce DX MCP Server (`@salesforce/mcp`), so Claude can also query the live org (describe objects, run SOQL) alongside reading the forged skills.
 
@@ -86,26 +86,44 @@ sf-claude-context-forge/
 │       ├── salesforce-connected-apps/SKILL.md + references/
 │       ├── salesforce-prompt-templates/SKILL.md + references/
 │       ├── salesforce-flexipages/SKILL.md + references/
-│       └── salesforce-approval-processes/SKILL.md + references/
+│       ├── salesforce-approval-processes/SKILL.md + references/
+│       ├── salesforce-global-value-sets/SKILL.md + references/
+│       ├── salesforce-custom-permissions/SKILL.md + references/
+│       ├── salesforce-assignment-rules/SKILL.md + references/
+│       ├── salesforce-applications/SKILL.md + references/
+│       ├── salesforce-reports/SKILL.md + references/
+│       ├── salesforce-dashboards/SKILL.md + references/
+│       ├── salesforce-static-resources/SKILL.md + references/
+│       ├── salesforce-named-credentials/SKILL.md + references/
+│       └── salesforce-external-credentials/SKILL.md + references/
 │
 ├── generated/
 │   └── reference/                ← Output: plain reference docs for non-creatable types
 │
 ├── demo-metadata/               ← Sample SFDX metadata for --demo mode
 │   ├── objects/
-│   │   ├── Account__c/          ← Supplier Account custom object
-│   │   └── Project__c/          ← Project custom object
 │   ├── flows/
-│   │   ├── Project_Status_Notification.flow-meta.xml
-│   │   └── Case_Escalation.flow-meta.xml
 │   ├── classes/
-│   │   ├── ProjectTriggerHandler.cls
-│   │   ├── ProjectTriggerHandler_Test.cls
-│   │   └── ProjectService.cls
 │   ├── triggers/
-│   │   └── ProjectTrigger.trigger
-│   └── lwc/
-│       └── projectSummary/      ← LWC using @wire and LDS
+│   ├── lwc/
+│   ├── permissionsets/
+│   ├── profiles/
+│   ├── layouts/
+│   ├── emailTemplates/
+│   ├── customMetadata/
+│   ├── connectedApps/
+│   ├── genAiPromptTemplates/
+│   ├── flexipages/
+│   ├── approvalProcesses/
+│   ├── globalValueSets/
+│   ├── customPermissions/
+│   ├── assignmentRules/
+│   ├── applications/
+│   ├── reports/
+│   ├── dashboards/
+│   ├── staticresources/
+│   ├── namedCredentials/
+│   └── externalCredentials/     ← All 23 supported types covered
 │
 ├── scripts/
 │   ├── node/
@@ -123,6 +141,15 @@ sf-claude-context-forge/
 │   │   │   ├── genAiPromptTemplateParser.js
 │   │   │   ├── flexipageParser.js
 │   │   │   ├── approvalProcessParser.js
+│   │   │   ├── globalValueSetParser.js
+│   │   │   ├── customPermissionsParser.js
+│   │   │   ├── assignmentRulesParser.js
+│   │   │   ├── applicationParser.js
+│   │   │   ├── reportParser.js
+│   │   │   ├── dashboardParser.js
+│   │   │   ├── staticResourceParser.js
+│   │   │   ├── namedCredentialParser.js
+│   │   │   ├── externalCredentialParser.js
 │   │   │   └── genericParser.js      ← fallback for any type without a dedicated parser
 │   │   └── generator.js
 │   └── python/
@@ -143,6 +170,15 @@ sf-claude-context-forge/
 │           ├── gen_ai_prompt_template_parser.py
 │           ├── flexipage_parser.py
 │           ├── approval_process_parser.py
+│           ├── global_value_set_parser.py
+│           ├── custom_permissions_parser.py
+│           ├── assignment_rules_parser.py
+│           ├── application_parser.py
+│           ├── report_parser.py
+│           ├── dashboard_parser.py
+│           ├── static_resource_parser.py
+│           ├── named_credential_parser.py
+│           ├── external_credential_parser.py
 │           └── generic_parser.py      ← fallback for any type without a dedicated parser
 │
 └── SKILL.md                     ← Static skill: how to use this tool with Claude
@@ -159,6 +195,11 @@ sf-claude-context-forge/
 | `./forge.sh --dry-run` | Preview skill output without writing files |
 | `npm run forge` | Same as above via npm |
 | `npm run forge:demo` | Demo mode via npm |
+| `npm run forge:dry` | Dry-run via npm |
+| `npm run forge:demo:dry` | Demo + dry-run via npm |
+| `npm run forge:python` | Python runtime via npm |
+| `npm run forge:python:demo` | Python demo mode via npm |
+| `npm run forge:python:dry` | Python dry-run via npm |
 | `python forge.py` | Python equivalent of forge.sh |
 | `python forge.py --demo` | Python demo mode |
 
@@ -178,7 +219,7 @@ Controls the org name stamped into generated skills, which metadata types get a 
   "orgAlias": "my-alias",
   "srcDir": "src",
   "outputDir": "generated",
-  "metadataTypes": ["objects", "flows", "classes", "triggers", "lwc", "permissionsets", "profiles", "layouts", "emailTemplates", "customMetadata", "connectedApps", "genAiPromptTemplates", "flexipages", "approvalProcesses"],
+  "metadataTypes": ["objects", "flows", "classes", "triggers", "lwc", "permissionsets", "profiles", "layouts", "emailTemplates", "customMetadata", "connectedApps", "genAiPromptTemplates", "flexipages", "approvalProcesses", "globalValueSets", "customPermissions", "assignmentRules", "applications", "reports", "dashboards", "staticresources", "namedCredentials", "externalCredentials"],
   "skillFormat": "agent-skills",
   "useDemoIfSrcEmpty": true
 }
@@ -194,7 +235,7 @@ Each parser is a thin wrapper around stdlib XML extraction (regex-based, no exte
 
 | Parser | Input | Key output fields | Tier |
 |---|---|---|---|
-| objectParser | `objects/*/` | apiName, label, fields[{apiName, type, required}] | Skill |
+| objectParser | `objects/*/` | apiName, label, fields[{apiName, type, required}], validationRules, recordTypes | Skill |
 | apexParser | `classes/`, `triggers/` | classes[{name, isTest, sharing}], triggers[{name, object, events}] | Skill |
 | flowParser | `flows/*.flow-meta.xml` | apiName, processType, triggerType, object | Skill |
 | lwcParser | `lwc/*/` | name, files, hasApexWire, hasLds | Skill |
@@ -207,6 +248,15 @@ Each parser is a thin wrapper around stdlib XML extraction (regex-based, no exte
 | genAiPromptTemplateParser | `genAiPromptTemplates/*.genAiPromptTemplate-meta.xml` | apiName, masterLabel, templateType, content | Skill |
 | flexipageParser | `flexipages/*.flexipage-meta.xml` | apiName, masterLabel, type, sobjectType | Skill |
 | approvalProcessParser | `approvalProcesses/*.approvalProcess-meta.xml` | fullName, entity, label, active | Skill |
+| globalValueSetParser | `globalValueSets/*.globalValueSet-meta.xml` | valueSets[{apiName, masterLabel, sorted, values}] | Skill |
+| customPermissionsParser | `customPermissions/*.customPermission-meta.xml` | permissions[{apiName, label, description, isSessionActivated}] | Skill |
+| assignmentRulesParser | `assignmentRules/*.assignmentRules-meta.xml` | rulesets[{object, activeRules, totalRules, rules}] | Skill |
+| applicationParser | `applications/*.app-meta.xml` | apps[{apiName, label, description, navType}] | Skill |
+| reportParser | `reports/**/*.report-meta.xml` | reports[{name, reportType, format, description}] | Skill |
+| dashboardParser | `dashboards/**/*.dashboard-meta.xml` | dashboards[{name, title, description}] | Skill |
+| staticResourceParser | `staticresources/*.resource-meta.xml` | resources[{apiName, contentType, cacheControl}] | Skill |
+| namedCredentialParser | `namedCredentials/*.namedCredential-meta.xml` | credentials[{apiName, label, endpoint, principalType, protocol}] | Skill |
+| externalCredentialParser | `externalCredentials/*.externalCredential-meta.xml` | credentials[{apiName, label, description, authenticationProtocol}] | Skill |
 | genericParser | any `*-meta.xml` (recursive) | apiName, label, fullName, description | Reference (fallback for any type without a dedicated parser above) |
 
 ---

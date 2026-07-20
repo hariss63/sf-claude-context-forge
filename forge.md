@@ -33,7 +33,7 @@ python forge.py
 ```
 
 ## What the forge produces
-After running, `.claude/skills/` will contain one native Agent Skill (`SKILL.md` + `references/<type>-reference.md`) per creatable metadata type found in `src/` — 14 types get a dedicated parser (objects, flows, classes+triggers, lwc, permissionsets, profiles, layouts, emailTemplates, customMetadata, connectedApps, genAiPromptTemplates, flexipages, approvalProcesses). Any other metadata type present in `src/` is picked up automatically via a generic parser and written as a plain reference doc to `generated/reference/<type>.md` instead — no config entry required. Each skill teaches Claude:
+After running, `.claude/skills/` will contain one native Agent Skill (`SKILL.md` + `references/<type>-reference.md`) per creatable metadata type found in `src/` — 23 types get a dedicated parser (objects, flows, classes+triggers, lwc, permissionsets, profiles, layouts, emailTemplates, customMetadata, connectedApps, genAiPromptTemplates, flexipages, approvalProcesses, globalValueSets, customPermissions, assignmentRules, applications, reports, dashboards, staticresources, namedCredentials, externalCredentials). Any other metadata type present in `src/` is picked up automatically via a generic parser and written as a plain reference doc to `generated/reference/<type>.md` instead — no config entry required. Each skill teaches Claude:
 - The naming conventions used in this org
 - The metadata patterns and structures in use
 - Design rules for creating new metadata of that type
@@ -42,7 +42,7 @@ Skills under `.claude/skills/` are auto-loaded by Claude Code — there's no pus
 
 ## Troubleshooting
 - **src/ is empty** → forge automatically uses `demo-metadata/` if `useDemoIfSrcEmpty` is true in `org-config.json`
-- **Missing metadata type** → check that the folder exists in `src/` (e.g. `src/flows/`); if it's not one of the 14 dedicated types, it should still show up as a reference doc rather than being skipped
+- **Missing metadata type** → check that the folder exists in `src/` (e.g. `src/flows/`); if it's not one of the 23 dedicated types, it should still show up as a reference doc rather than being skipped
 - **Node not found** → forge.sh falls back to Python automatically
 - **Permission denied on forge.sh** → run `chmod +x forge.sh`
 

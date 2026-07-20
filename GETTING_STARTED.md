@@ -35,7 +35,7 @@ This is the best way to understand what the tool does before touching anything r
 ```bash
 node forge.js --demo
 ```
-This uses sample metadata that's bundled in the repo (a pretend "Project" object, some Apex classes, a flow) instead of a real org. It'll create a `.claude/skills/` folder with a handful of `SKILL.md` files inside.
+This uses sample metadata that's bundled in the repo (covering all 23 supported metadata types) instead of a real org. It'll create a `.claude/skills/` folder with 22 `SKILL.md` files inside (classes and triggers share one skill).
 
 Now open Claude Code in this folder and try asking something like:
 > "Create a trigger on the Contact object that follows our existing Apex patterns"

@@ -17,6 +17,15 @@ From the developer's plain English prompt, determine what they want to build:
 - "prompt template", "Prompt Builder", "Agentforce prompt" → Prompt templates (`.claude/skills/salesforce-prompt-templates/`)
 - "flexipage", "Lightning page", "app page", "record page" → FlexiPages (`.claude/skills/salesforce-flexipages/`)
 - "approval process" → Approval Processes (`.claude/skills/salesforce-approval-processes/`)
+- "global value set", "shared picklist" → Global Value Sets (`.claude/skills/salesforce-global-value-sets/`)
+- "custom permission", "feature flag", "feature gate" → Custom Permissions (`.claude/skills/salesforce-custom-permissions/`)
+- "assignment rule", "case routing", "lead routing" → Assignment Rules (`.claude/skills/salesforce-assignment-rules/`)
+- "lightning app", "app navigation" → Applications (`.claude/skills/salesforce-applications/`)
+- "report" → Reports (`.claude/skills/salesforce-reports/`)
+- "dashboard" → Dashboards (`.claude/skills/salesforce-dashboards/`)
+- "static resource", "static asset" → Static Resources (`.claude/skills/salesforce-static-resources/`)
+- "named credential", "callout", "external service" → Named Credentials (`.claude/skills/salesforce-named-credentials/`)
+- "external credential", "OAuth flow", "principal" → External Credentials (`.claude/skills/salesforce-external-credentials/`)
 
 ### Step 2: Load the relevant skill
 Claude Code auto-loads `SKILL.md` files under `.claude/skills/`, so the relevant skill may already be in context. If more detail is needed than the `SKILL.md` summary provides, read its `references/<type>-reference.md` — it contains this org's actual naming conventions, patterns, and examples extracted from real metadata. If the skill might be stale (org changed since the last forge run), cross-check current state via the MCP tools configured in `.mcp.json` instead of assuming the skill is current.
