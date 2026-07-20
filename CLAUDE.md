@@ -64,6 +64,7 @@ sf-claude-context-forge/
 ├── forge.js                     ← Node.js entry point
 ├── forge.py                     ← Python entry point
 ├── forge.sh                     ← Shell entry point (wraps Node or Python)
+├── retrieve.sh                  ← Login + retrieve metadata + forge in one command
 ├── org-config.json              ← Org name and preferences
 ├── .mcp.json                    ← Live org access via @salesforce/mcp
 ├── package.json                 ← npm scripts
@@ -190,6 +191,10 @@ sf-claude-context-forge/
 
 | Command | Purpose |
 |---|---|
+| `./retrieve.sh` | Log in to org → retrieve metadata into `src/` → run forge (all in one) |
+| `./retrieve.sh --skip-forge` | Log in + retrieve only, skip the forge step |
+| `./retrieve.sh --alias my-org` | Override the org alias on the command line |
+| `npm run retrieve` | Same as `./retrieve.sh` via npm |
 | `./forge.sh` | Run the forge step against `src/` |
 | `./forge.sh --demo` | Run against bundled `demo-metadata/` |
 | `./forge.sh --dry-run` | Preview skill output without writing files |

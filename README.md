@@ -34,14 +34,38 @@ git clone https://github.com/your-org/sf-claude-context-forge.git
 cd sf-claude-context-forge
 ```
 
-### 2. Add your metadata
-Retrieve your SFDX metadata and place it in `src/`:
-```bash
-sf project retrieve start --target-org your-alias --output-dir src/
-```
-Or try the included demo metadata first — it works out of the box.
+### 2. Retrieve your metadata and run the forge
 
-### 3. Run the forge
+**Option A — One command (recommended)**
+This installs the Salesforce CLI if needed, logs you in, pulls your metadata, and runs the forge:
+```bash
+chmod +x retrieve.sh
+./retrieve.sh
+```
+Or via npm: `npm run retrieve`
+
+**Option B — Manually, step by step**
+```bash
+# Install Salesforce CLI (one-time)
+npm install --global @salesforce/cli
+
+# Log in to your org (opens browser)
+sf org login web --alias your-alias
+
+# Retrieve metadata into src/
+sf project retrieve start --target-org your-alias \
+  --metadata "CustomObject,ApexClass,ApexTrigger,Flow,LightningComponentBundle,..."
+
+# Run the forge
+npm run forge
+```
+
+**No real org yet?** Try the bundled demo first:
+```bash
+npm run forge:demo
+```
+
+### 3. Run the forge (if you ran retrieve separately)
 
 **Option A — Node.js**
 ```bash
@@ -142,7 +166,8 @@ sf-claude-context-forge/
 │
 ├── .mcp.json                     # Live org access via @salesforce/mcp
 ├── org-config.json               # Per-org configuration
-├── forge.sh                      # Universal entry point
+├── retrieve.sh                   # Log in + retrieve metadata + forge in one command
+├── forge.sh                      # Run forge only (wraps Node or Python)
 ├── forge.js                      # Node.js entry point
 ├── forge.py                      # Python entry point
 ├── package.json

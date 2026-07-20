@@ -74,5 +74,6 @@ Triggered when the developer asks Claude to build something new.
 - `demo-metadata/` — sample metadata for first-time use (all 23 supported types)
 - `.claude/skills/` — generated Claude Agent Skills (output of forge, auto-loaded by Claude Code)
 - `generated/reference/` — plain reference docs for non-creatable metadata types
+- `retrieve.sh` — login + retrieve metadata + forge in one command
 - `scripts/node/` — Node.js parsers and generator
 - `scripts/python/` — Python parsers and generator

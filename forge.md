@@ -5,6 +5,16 @@ Load this skill when the developer asks to run the forge, regenerate skills, or 
 
 ## How to run the forge
 
+### All-in-one: retrieve metadata + forge (recommended for first use)
+```bash
+chmod +x retrieve.sh
+./retrieve.sh
+# or: npm run retrieve
+```
+This logs you into your org, pulls metadata into `src/`, then runs the forge automatically.
+
+### Forge only (when src/ already has metadata)
+
 ### Universal (auto-detects runtime)
 ```bash
 ./forge.sh

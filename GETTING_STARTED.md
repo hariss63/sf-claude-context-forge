@@ -46,34 +46,37 @@ Claude will read those skill files and generate code matching the *sample* org's
 
 ## Step 3: When you're ready to connect your real Salesforce org
 
-This is where "sf CLI" comes in. Quick plain-English primer:
+This project includes a script that handles everything in one go — installing the CLI, logging in, pulling metadata, and running the forge:
 
-- **Salesforce CLI (`sf`)** is a command-line tool Salesforce provides for talking to your org — logging in, pulling down metadata, deploying changes.
-- An **"org"** just means a specific Salesforce environment (your company's, a free Developer Edition, a sandbox, etc.).
-- An **"alias"** is just a short nickname you give that org so you don't have to type its full URL every time.
+```bash
+chmod +x retrieve.sh
+./retrieve.sh
+```
 
-Steps:
+Or via npm:
+```bash
+npm run retrieve
+```
 
-1. **Install the CLI** (one-time):
-   ```bash
-   npm install --global @salesforce/cli
-   ```
-2. **Log in to your org** — this opens a browser window for you to authenticate:
-   ```bash
-   sf org login web --alias my-org
-   ```
-   ("my-org" is just a name you're picking for yourself — call it whatever you want.)
-3. **Pull your org's metadata down** into this project's `src/` folder:
-   ```bash
-   sf project retrieve start --target-org my-org --output-dir src/
-   ```
-   This copies your real objects, Apex classes, flows, etc. onto your machine as files.
-4. **Run the forge for real** (no `--demo` flag this time):
-   ```bash
-   node forge.js
-   ```
-   Now `.claude/skills/` gets rebuilt from *your actual org's* patterns instead of the sample data.
-5. Go back to Claude Code and ask for what you need — it now mirrors your real org.
+Here's what it does under the hood, in case you're curious:
+
+1. **Checks if the Salesforce CLI is installed** — installs it automatically if not (`npm install -g @salesforce/cli`)
+2. **Reads your org alias from `org-config.json`** — asks you for it if not set
+3. **Checks if you're already logged in** — opens a browser for you to authenticate if not
+4. **Pulls your org's metadata** into the `src/` folder (your objects, classes, flows, etc.)
+5. **Runs the forge** — builds all the AI cheat sheets from that metadata
+
+If you want to retrieve but handle the forge separately:
+```bash
+./retrieve.sh --skip-forge
+```
+
+If you want to point at a specific org alias:
+```bash
+./retrieve.sh --alias my-sandbox
+```
+
+After this finishes, go back to Claude Code and ask for what you need — it now mirrors your real org.
 
 ---
 
@@ -89,8 +92,8 @@ There's a `.mcp.json` file in the repo that lets Claude query your live org dire
 |---|---|---|
 | `node forge.js --demo` | Skills built from bundled sample data | None |
 | Ask Claude to build something | See the tool work end-to-end | None |
-| Install `sf` CLI + log in | Access to your real org | Basic |
-| `sf project retrieve` + `node forge.js` | Skills built from *your* org's real patterns | Basic |
+| `./retrieve.sh` | Login + retrieve + forge in one command | None |
+| Update `org-config.json` `orgAlias` | Skills built from *your* org's real patterns | Basic |
 | `.mcp.json` | Claude can check live org state directly | Basic |
 
 **Don't skip the demo.** It costs two minutes and means you'll understand what's happening before you deal with logging into a real org.

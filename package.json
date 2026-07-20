@@ -4,6 +4,8 @@
   "description": "Turn your Salesforce org metadata into Claude-ready skills",
   "main": "forge.js",
   "scripts": {
+    "retrieve": "bash retrieve.sh",
+    "retrieve:skip-forge": "bash retrieve.sh --skip-forge",
     "forge": "node forge.js",
     "forge:demo": "node forge.js --demo",
     "forge:dry": "node forge.js --dry-run",
